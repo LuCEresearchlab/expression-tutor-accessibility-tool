@@ -1,11 +1,12 @@
-# execution:
+# Converter:
+## Execution:
 To run the script use the following command in your terminal:
 ```
 python3 ConverterExpressionTreeEditor.py Example.json
 ```
 Example.json is a file downloaded from the ExpressionTutor.
 
-# printed example:
+## printed example:
 The main idea of the script is to create a visualization of a tree diagram that is accessible also for people with 
 impairments. An example of what is returned by the script:
 ```

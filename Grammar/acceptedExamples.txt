@@ -1,0 +1,22 @@
+type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}
+#########
+@1 {1;1;[2,3];"="}
+
+
+type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}
+#########
+@1 {null;1;2;"xx"}
+   @2 {1;1;2;"ciao"}
+
+
+type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}
+#########
+@1 {1;1;2;"xx";int;"210"}
+   @2 {1;1;2;"ciao"}
+
+type: treeDiagram, nodes: 10, maxDepth: 2, nodeStructure: {parentID; nodeID; childrenID; label, type, value}
+##########
+@root {null;root;[1, 2];"# + #";Number;10}
+@1 {root;1;[3, 4];"# - #";Boolean;true} {root;2;[5, 6];"# / #";Object;noValue}
+@2 {1;3;null;"1";noType;noValue} {1;4;null;"2";noType;noValue} {2;5;null;"3";noType;noValue} {2;6;null;"# + #";noType;noValue}
+@not_connected {null;7;null;"5";noType;Not connected} {null;8;null;"6";noType;Not connected} {null;9;null;"7";noType;Not connected}
