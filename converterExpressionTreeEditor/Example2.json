@@ -1,0 +1,126 @@
+{
+  "nodes": {
+    "n0": {
+      "pieces": [
+        "#",
+        "+",
+        "#"
+      ],
+      "x": 320,
+      "y": 90,
+      "type": "Number",
+      "value": "10",
+      "isFinal": true
+    },
+    "n1": {
+      "pieces": [
+        "#",
+        "-",
+        "#"
+      ],
+      "x": 320,
+      "y": 120,
+      "type": "Boolean",
+      "value": "true",
+      "isFinal": false
+    },
+    "n2": {
+      "pieces": [
+        "#",
+        "/",
+        "#"
+      ],
+      "x": 320,
+      "y": 150,
+      "type": "Object",
+      "value": "",
+      "isFinal": false
+    },
+    "n3": {
+      "pieces": [
+        "1"
+      ],
+      "x": 320,
+      "y": 190,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n4": {
+      "pieces": [
+        "2"
+      ],
+      "x": 320,
+      "y": 190,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n5": {
+      "pieces": [
+        "3"
+      ],
+      "x": 460,
+      "y": 230,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n7": {
+      "pieces": [
+        "5"
+      ],
+      "x": 520,
+      "y": 190,
+      "type": "",
+      "value": "Not connected"
+    },
+    "n8": {
+      "pieces": [
+        "6"
+      ],
+      "x": 520,
+      "y": 190,
+      "type": "",
+      "value": "Not connected"
+    },
+    "n9": {
+      "pieces": [
+        "7"
+      ],
+      "x": 520,
+      "y": 190,
+      "type": "",
+      "value": "Not connected"
+    }
+  },
+  "edges": {
+    "e0": {
+      "parentNodeId": "n0",
+      "childNodeId": "n1",
+      "parentPieceId": 0
+    },
+    "e1": {
+      "parentNodeId": "n0",
+      "childNodeId": "n2",
+      "parentPieceId": 2
+    },
+    "e2": {
+      "parentNodeId": "n1",
+      "childNodeId": "n3",
+      "parentPieceId": 0
+    },
+    "e3": {
+      "parentNodeId": "n1",
+      "childNodeId": "n4",
+      "parentPieceId": 2
+    },
+    "e4": {
+      "parentNodeId": "n2",
+      "childNodeId": "n5",
+      "parentPieceId": 0
+    }
+  },
+  "selectedRootNode": "n0",
+  "nodeConnector": "#"
+}
