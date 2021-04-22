@@ -15,25 +15,33 @@ class TerminalColors:
     UNDERLINE = '\033[4m'
 
 
-# TODO metterlo in una funzione open file
+class File:
+    def __init__(self, filename, data_input, node_number, edge_number, root_node, node_connector, node_structure):
+        self.filename = filename
+        self.data_input = data_input
+        self.node_number = node_number
+        self.edge_number = edge_number
+        self.root_node = root_node
+        self.node_connector = node_connector
+        self.node_structure = node_structure
 
-# read the json file
-with open(sys.argv[1], 'r') as f:
-    data_in = json.loads(f.read())
 
-node_number = len(data_in['nodes'])
-edge_number = len(data_in['edges'])
-selected_root_node = data_in['selectedRootNode']
-node_connector = data_in['nodeConnector']
-node_structure = "{parentID; nodeID; childrenID; label, type, value}"
+def load_file(filename=sys.argv[1]):
+    # read the json file
+    with open(filename, 'r') as f:
+        input_data = json.loads(f.read())
 
-id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
-node_levels = {}
+    file_node_number = len(input_data['nodes'])
+    file_edge_number = len(input_data['edges'])
 
-print(f"loaded file: {sys.argv[1]}")
-print('')
+    file_selected_root_node = input_data['selectedRootNode']
+    file_node_connector = input_data['nodeConnector']
+    file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
 
-# TODO fino a qui
+    new_file = File(filename, input_data, file_node_number, file_edge_number, file_selected_root_node,
+                    file_node_connector, file_node_structure)
+
+    return new_file
 
 
 # give some general info for developing purposes
@@ -53,7 +61,7 @@ def dev_print_infos():
     print("-------------------------------------------------------\n")
 
 
-def populate_levels(root_node=selected_root_node):
+def populate_levels(root_node):
     node_counter = 0
     new_id_counter = 1
     max_found_depth = 0
@@ -214,12 +222,20 @@ def check_node(node_id):
 
 
 if __name__ == "__main__":
-
     # dev_print_infos()
     # print(f"Dictionary of id's: {id_dictionary}")
     # print(f"Dictionary of nodes: {node_levels} \n")
-
-    max_depth = populate_levels()
+    read_file = load_file()
+    data_in = read_file.data_input
+    node_number = read_file.node_number
+    edge_number = read_file.edge_number
+    selected_root_node = read_file.root_node
+    node_connector = read_file.node_connector
+    node_structure = read_file.node_structure
+    id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
+    node_levels = {}
+    max_depth = populate_levels(selected_root_node)
+    print(f"loaded file: {read_file.filename}\n")
 
     print_description()
     print_separator()
@@ -232,16 +248,20 @@ if __name__ == "__main__":
 
         if commandList[0] == 'clear':
             clear()
+
         elif commandList[0] in ['quit', 'q']:
             break
+
         elif commandList[0] in ['help', 'h']:
             print('here should be the list of possible commands')
             print('')
+
         elif commandList[0] == 'printTree':
             # print_description()
             # print_separator()
             print_levels()
             print('')
+
         elif commandList[0] == 'expandNode':
             if 1 < len(commandList) < 3:
                 if check_node(commandList[1]):
@@ -252,23 +272,32 @@ if __name__ == "__main__":
                     print(f"{TerminalColors.FAIL}Warning: Node {commandList[1]} does not exist!{TerminalColors.ENDC}")
             else:
                 print(f"{TerminalColors.FAIL}Wrong syntax: expandNode nodeID{TerminalColors.ENDC}")
+
         elif commandList[0] == 'scaleDownNode':
             scale_down_node(commandList[1])
             print('')
 
-# execution:
-# python3 ConverterExpressionTreeEditor.py Example.json
+        elif commandList[0] == 'load':
+            read_file = load_file(commandList[1])
+            data_in = read_file.data_input
+            node_number = read_file.node_number
+            edge_number = read_file.edge_number
+            selected_root_node = read_file.root_node
+            node_connector = read_file.node_connector
+            node_structure = read_file.node_structure
+            id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
+            node_levels = {}
+            max_depth = populate_levels(selected_root_node)
+            print(f"loaded file: {read_file.filename}\n")
+            print_description()
+            print_separator()
+            print_levels()
+            print('')
 
-"""
-printed example:
-type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}
-#########
-@1 {1;1;2;"="}
-"""
 
 # TODO
 # - printare le info dei nodi in base alla node Structure scelta
-# - scrivere un main program che gestisce gli input dalla shell
+# - migliorare il main program che gestisce gli input dalla shell
 # - esporta diagramma in un file txt
 # - stampa un intervallo di linee
 # - check 'parentPieceId' order
