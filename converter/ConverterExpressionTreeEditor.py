@@ -256,15 +256,7 @@ if __name__ == "__main__":
             scale_down_node(commandList[1])
             print('')
 
-# execution:
-# python3 ConverterExpressionTreeEditor.py Example.json
 
-"""
-printed example:
-type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}
-#########
-@1 {1;1;2;"="}
-"""
 
 # TODO
 # - printare le info dei nodi in base alla node Structure scelta
