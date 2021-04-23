@@ -1,0 +1,1 @@
+type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}#########@1 {1;1;[2,3];"="}

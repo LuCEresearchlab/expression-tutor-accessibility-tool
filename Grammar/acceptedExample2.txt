@@ -1,0 +1,4 @@
+type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}
+#########
+@1 {null;1;2;"xx"}
+   @2 {1;1;2;"ciao"}
