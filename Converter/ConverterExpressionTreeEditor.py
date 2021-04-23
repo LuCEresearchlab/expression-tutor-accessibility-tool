@@ -1,6 +1,6 @@
 import json
 import sys
-from os import system
+import os
 
 
 class TerminalColors:
@@ -40,6 +40,8 @@ def load_file(filename=sys.argv[1]):
 
     new_file = File(filename, input_data, file_node_number, file_edge_number, file_selected_root_node,
                     file_node_connector, file_node_structure)
+
+    f.close()
 
     return new_file
 
@@ -202,7 +204,7 @@ def print_levels():
 
 
 def clear():
-    _ = system('clear')
+    _ = os.system('clear')
 
 
 def get_string(message):
@@ -257,8 +259,12 @@ if __name__ == "__main__":
             print('')
 
         elif commandList[0] == 'printTree':
-            # print_description()
-            # print_separator()
+            print_levels()
+            print('')
+
+        elif commandList[0] == 'printAll':
+            print_description()
+            print_separator()
             print_levels()
             print('')
 
@@ -278,22 +284,24 @@ if __name__ == "__main__":
             print('')
 
         elif commandList[0] == 'load':
-            read_file = load_file(commandList[1])
-            data_in = read_file.data_input
-            node_number = read_file.node_number
-            edge_number = read_file.edge_number
-            selected_root_node = read_file.root_node
-            node_connector = read_file.node_connector
-            node_structure = read_file.node_structure
-            id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
-            node_levels = {}
-            max_depth = populate_levels(selected_root_node)
-            print(f"loaded file: {read_file.filename}\n")
-            print_description()
-            print_separator()
-            print_levels()
-            print('')
-
+            if os.path.isfile(commandList[1]):
+                read_file = load_file(commandList[1])
+                data_in = read_file.data_input
+                node_number = read_file.node_number
+                edge_number = read_file.edge_number
+                selected_root_node = read_file.root_node
+                node_connector = read_file.node_connector
+                node_structure = read_file.node_structure
+                id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
+                node_levels = {}
+                max_depth = populate_levels(selected_root_node)
+                print(f"loaded file: {read_file.filename}\n")
+                print_description()
+                print_separator()
+                print_levels()
+                print('')
+            else:
+                print(f"{TerminalColors.FAIL}File {commandList[1]} not accessible.{TerminalColors.ENDC}")
 
 # TODO
 # - printare le info dei nodi in base alla node Structure scelta
