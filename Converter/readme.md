@@ -19,6 +19,7 @@ type: treeDiagram, nodes: 10, maxDepth: 2, nodeStructure: {parentID; nodeID; chi
 ```
 
 ## List of the working commands:
+The following commands are correctly implemented and are working inside the script, when the field "Insert command:" appears;
 ```
 clear or c
 quit or q
