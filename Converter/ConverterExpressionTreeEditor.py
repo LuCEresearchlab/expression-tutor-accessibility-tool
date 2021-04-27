@@ -1,6 +1,7 @@
 import json
 import sys
 import os
+import argparse
 
 
 class TerminalColors:
@@ -26,6 +27,24 @@ class File:
         self.node_structure = node_structure
 
 
+# ArgumentParser commands
+parser = argparse.ArgumentParser()
+subparsers = parser.add_subparsers(help='types of print')
+
+print_parser = subparsers.add_parser("print")
+node_parser = subparsers.add_parser("node")
+
+print_parser.add_argument("--all", help="Prints the description and the tree diagram.", action="store_true")
+print_parser.add_argument("--tree", help="Prints the tree diagram.", action="store_true")
+print_parser.add_argument("--level", help="Prints the node.")
+print_parser.add_argument("--node", help="Prints the node.")
+print_parser.add_argument("--description", help="Prints the description.", action="store_true")
+
+# parser.add_argument('-l', '--label', help="Label of a node.")
+# parser.add_argument('-v', '--value', help="Value of a node.", default='Not connected')
+# parser.add_argument('-t', '--type', help="Type of a node.")
+
+
 def load_file(filename=sys.argv[1]):
     # read the json file
     with open(filename, 'r') as f:
@@ -42,7 +61,6 @@ def load_file(filename=sys.argv[1]):
                     file_node_connector, file_node_structure)
 
     f.close()
-
     return new_file
 
 
@@ -103,7 +121,8 @@ def populate_levels(root_node):
 
 
 def print_description():
-    print(f"type: treeDiagram, nodes: {node_number}, maxDepth: {max_depth}, nodeStructure: {node_structure}")
+    print(f'type: treeDiagram, nodes: {node_number}, maxDepth: {max_depth}, nodeStructure: {node_structure}, '
+          f'connector: "{node_connector}"')
 
 
 def print_separator(number_of_separators=10, separator="#"):
@@ -195,12 +214,18 @@ def print_level(level):
     return string
 
 
-def print_levels():
-    for level in node_levels:
-        if level != "not_connected":
-            print(f"@{level} {print_level(level)}")
-    level = "not_connected"
-    print(f"@{level} {print_level(level)}")
+def print_levels(selected_level=False):
+    if selected_level:
+        if selected_level in ["root", "not_connected"]:
+            print(f"@{selected_level} {print_level(selected_level)}")
+        else:
+            print(f"@{int(selected_level)} {print_level(int(selected_level))}")
+    else:
+        for level in node_levels:
+            if level != "not_connected":
+                print(f"@{level} {print_level(level)}")
+        level = "not_connected"
+        print(f"@{level} {print_level(level)}")
 
 
 def clear():
@@ -216,17 +241,25 @@ def get_string(message):
             print(f"{TerminalColors.FAIL}Warning: Your input was empty!{TerminalColors.ENDC}")
 
 
-def check_node(node_id):
-    if node_id in data_in['nodes']:
-        return True
+def check_node_get_original_id(node_id_to_test):
+    if node_id_to_test == "root":
+        for node in id_dictionary:
+            if id_dictionary[node]['new_id'] == "root":
+                return node
+
+    if node_id_to_test.isnumeric():
+        if 0 < int(node_id_to_test) < node_number:
+            for node in id_dictionary:
+                if id_dictionary[node]['new_id'] == int(node_id_to_test):
+                    return node
+
     else:
         return False
 
 
 if __name__ == "__main__":
     # dev_print_infos()
-    # print(f"Dictionary of id's: {id_dictionary}")
-    # print(f"Dictionary of nodes: {node_levels} \n")
+
     read_file = load_file()
     data_in = read_file.data_input
     node_number = read_file.node_number
@@ -239,6 +272,9 @@ if __name__ == "__main__":
     max_depth = populate_levels(selected_root_node)
     print(f"loaded file: {read_file.filename}\n")
 
+    # print(f"Dictionary of nodes: {node_levels} \n")
+    # print(f"Dictionary of id's: {id_dictionary}")
+
     print_description()
     print_separator()
     print_levels()
@@ -248,7 +284,8 @@ if __name__ == "__main__":
         command = get_string("Insert command: ")
         commandList = command.strip().split(" ")
 
-        if commandList[0] == 'clear':
+        # helper commands
+        if commandList[0] in ['clear', 'c']:
             clear()
 
         elif commandList[0] in ['quit', 'q']:
@@ -258,73 +295,110 @@ if __name__ == "__main__":
             print('here should be the list of possible commands')
             print('')
 
-        elif commandList[0] == 'printTree':
-            print_levels()
-            print('')
+        # print commands
+        elif commandList[0] == 'print':
+            args = parser.parse_args(commandList)
 
-        elif commandList[0] == 'printAll':
-            print_description()
-            print_separator()
-            print_levels()
-            print('')
-
-        elif commandList[0] == 'expandNode':
-            if 1 < len(commandList) < 3:
-                if check_node(commandList[1]):
-                    expand_node(commandList[1])
-                    print(f"{TerminalColors.OKGREEN}Expanded node: {commandList[1]}{TerminalColors.ENDC}")
-                    print('')
-                else:
-                    print(f"{TerminalColors.FAIL}Warning: Node {commandList[1]} does not exist!{TerminalColors.ENDC}")
-            else:
-                print(f"{TerminalColors.FAIL}Wrong syntax: expandNode nodeID{TerminalColors.ENDC}")
-
-        elif commandList[0] == 'scaleDownNode':
-            scale_down_node(commandList[1])
-            print('')
-
-        elif commandList[0] == 'load':
-            if os.path.isfile(commandList[1]):
-                read_file = load_file(commandList[1])
-                data_in = read_file.data_input
-                node_number = read_file.node_number
-                edge_number = read_file.edge_number
-                selected_root_node = read_file.root_node
-                node_connector = read_file.node_connector
-                node_structure = read_file.node_structure
-                id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
-                node_levels = {}
-                max_depth = populate_levels(selected_root_node)
-                print(f"loaded file: {read_file.filename}\n")
+            if len(commandList) == 1 or args.all:
                 print_description()
                 print_separator()
                 print_levels()
                 print('')
-            else:
-                print(f"{TerminalColors.FAIL}File {commandList[1]} not accessible.{TerminalColors.ENDC}")
+
+            elif args.tree:
+                print_levels()
+                print('')
+
+            elif args.description:
+                print_description()
+                print('')
+
+            elif args.node:
+                old_id = check_node_get_original_id(args.node)
+                if old_id:
+                    print(f"{print_node(old_id)}")
+                    print('')
+                else:
+                    print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}")
+                    print('')
+
+            elif args.level:
+                if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
+                    print_levels(args.level)
+                    print('')
+                else:
+                    print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}")
+                    print('')
+
+        # elif commandList[0] == 'expandNode':
+        #     if len(commandList) == 2:
+        #         if check_node(commandList[1]):
+        #             expand_node(commandList[1])
+        #             print(f"{TerminalColors.OKGREEN}Expanded node: {commandList[1]}{TerminalColors.ENDC}")
+        #             print('')
+        #         else:
+        #             print(f"{TerminalColors.FAIL}Warning: Node {commandList[1]} does not exist!{TerminalColors.ENDC}")
+        #     else:
+        #         print(f"{TerminalColors.FAIL}Wrong syntax: expandNode nodeID{TerminalColors.ENDC}")
+
+        # elif commandList[0] == 'createNode':
+        #     # args = parser.parse_args(commandList)
+        #     # print(args)
+        #     break
+
+        # elif commandList[0] == 'scaleDownNode':
+        #     scale_down_node(commandList[1])
+        #     print('')
+
+        # elif commandList[0] == 'load':
+        #     if os.path.isfile(commandList[1]):
+        #         read_file = load_file(commandList[1])
+        #         data_in = read_file.data_input
+        #         node_number = read_file.node_number
+        #         edge_number = read_file.edge_number
+        #         selected_root_node = read_file.root_node
+        #         node_connector = read_file.node_connector
+        #         node_structure = read_file.node_structure
+        #         id_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
+        #         node_levels = {}
+        #         max_depth = populate_levels(selected_root_node)
+        #         print(f"loaded file: {read_file.filename}\n")
+        #         print_description()
+        #         print_separator()
+        #         print_levels()
+        #         print('')
+        #     else:
+        #         print(f"{TerminalColors.FAIL}File {commandList[1]} not accessible.{TerminalColors.ENDC}")
 
 # TODO
 # - printare le info dei nodi in base alla node Structure scelta
-# - migliorare il main program che gestisce gli input dalla shell
-# - esporta diagramma in un file txt
-# - stampa un intervallo di linee
-# - check 'parentPieceId' order
 
+# - migliorare il main program che gestisce gli input dalla shell con argparse e definire bene i commandi
 # - check if input one of the recognized commands
 # - standard command: command node -> to check
+# - gestire gli errori di argparse
+
+# - esporta diagramma in un file txt o json
+
+# - stampa un intervallo di linee
+
+# - check 'parentPieceId' order
 
 # - per i comandi usare il dizionario per tradurre i valori dei nodi nelle nuove id assegnate
 
+# carattere spazio - modificarlo nella grammatica
 
 # vedere con federico lunghezza linea (nodo spezzato?)
-# carattere spazio indicarlo nella descrizione (e modifica in grammatica)
 
-
-# 1 create label value type
+# - gestire node creation
+# 1 create -l label -v value -t type
 # 2 connect nodeID1 nodeID2
 # -> se fattibile decidere quale parentPieceId
 
+# - implementare node deletion
+
+# - indicare parentPieceId
 # {2:1;6;null;"# + #";noType;noValue} 2:1 per indicare parentPieceId?
 
-# node n0 -> print node
+# - update value of a node
 # node n0 label:"newLabel"  o  node n0 -l "newLabel"
