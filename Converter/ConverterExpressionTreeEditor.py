@@ -34,14 +34,23 @@ subparsers = parser.add_subparsers(help='types of print')
 print_parser = subparsers.add_parser("print")
 node_parser = subparsers.add_parser("node")
 
+# print commands parser
 print_parser.add_argument("--all", help="Prints the description and the tree diagram.", action="store_true")
 print_parser.add_argument("--tree", help="Prints the tree diagram.", action="store_true")
 print_parser.add_argument("--level", help="Prints the node.")
 print_parser.add_argument("--node", help="Prints the node.")
 print_parser.add_argument("--description", help="Prints the description.", action="store_true")
 
+# node commands parser
+node_parser.add_argument("--expand", help="Expands the node.")
+node_parser.add_argument("--scaleDown", help="Scales down the node.")
+# TODO to implement
+node_parser.add_argument("--create", help="Creates a node.")
+node_parser.add_argument("--modify", help="Modifies a node.")
+node_parser.add_argument("--delete", help="Deletes a node.")
+
+
 # parser.add_argument('-l', '--label', help="Label of a node.")
-# parser.add_argument('-v', '--value', help="Value of a node.", default='Not connected')
 # parser.add_argument('-t', '--type', help="Type of a node.")
 
 
@@ -134,9 +143,19 @@ def expand_node(node_id):
     id_dictionary[node_id].update({"expanded": True})
 
 
+def expand_all():
+    for node_id in id_dictionary:
+        id_dictionary[node_id].update({"expanded": True})
+
+
 # change expanded value to true
 def scale_down_node(node_id):
     id_dictionary[node_id].update({"expanded": False})
+
+
+def scale_down_all():
+    for node_id in id_dictionary:
+        id_dictionary[node_id].update({"expanded": False})
 
 
 def get_parent_node(node_id):
@@ -330,16 +349,40 @@ if __name__ == "__main__":
                     print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}")
                     print('')
 
-        # elif commandList[0] == 'expandNode':
-        #     if len(commandList) == 2:
-        #         if check_node(commandList[1]):
-        #             expand_node(commandList[1])
-        #             print(f"{TerminalColors.OKGREEN}Expanded node: {commandList[1]}{TerminalColors.ENDC}")
-        #             print('')
-        #         else:
-        #             print(f"{TerminalColors.FAIL}Warning: Node {commandList[1]} does not exist!{TerminalColors.ENDC}")
-        #     else:
-        #         print(f"{TerminalColors.FAIL}Wrong syntax: expandNode nodeID{TerminalColors.ENDC}")
+        # node commands
+        elif commandList[0] == 'node':
+            args = parser.parse_args(commandList)
+            # print("received as input :")
+            # print(args)
+
+            if args.expand or args.scaleDown:
+                if args.expand == "all" or args.scaleDown == "all":
+                    if args.expand == "all":
+                        expand_all()
+                    else:
+                        scale_down_all()
+                    print_levels()
+                    print('')
+                else:
+                    if args.expand:
+                        args_id = args.expand
+                    else:
+                        args_id = args.scaleDown
+                    old_id = check_node_get_original_id(args_id)
+                    if old_id:
+                        if args.expand:
+                            expand_node(old_id)
+                        else:
+                            scale_down_node(old_id)
+                        print(f"{print_node(old_id)}")
+                        print('')
+                    else:
+                        print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}")
+                        print('')
+
+        else:
+            print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}")
+            print('')
 
         # elif commandList[0] == 'createNode':
         #     # args = parser.parse_args(commandList)

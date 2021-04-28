@@ -26,7 +26,9 @@ quit or q
 help or h
 print --all
 print --tree
-print --level[levelNumber]
-print --node[nodeID]
+print --level [levelNumber]
+print --node [nodeID]
 print --description
+node --expand [nodeID or "all"]
+node --scaleDown [nodeID or "all"]
 ```
