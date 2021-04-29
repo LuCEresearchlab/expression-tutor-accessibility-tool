@@ -277,7 +277,6 @@ def check_node_get_original_id(node_id_to_test):
 
 
 if __name__ == "__main__":
-    # dev_print_infos()
 
     read_file = load_file()
     data_in = read_file.data_input
@@ -293,6 +292,7 @@ if __name__ == "__main__":
 
     # print(f"Dictionary of nodes: {node_levels} \n")
     # print(f"Dictionary of id's: {id_dictionary}")
+    # dev_print_infos()
 
     print_description()
     print_separator()
@@ -316,69 +316,77 @@ if __name__ == "__main__":
 
         # print commands
         elif commandList[0] == 'print':
-            args = parser.parse_args(commandList)
+            try:
+                args = parser.parse_args(commandList)
 
-            if len(commandList) == 1 or args.all:
-                print_description()
-                print_separator()
-                print_levels()
-                print('')
-
-            elif args.tree:
-                print_levels()
-                print('')
-
-            elif args.description:
-                print_description()
-                print('')
-
-            elif args.node:
-                old_id = check_node_get_original_id(args.node)
-                if old_id:
-                    print(f"{print_node(old_id)}")
-                    print('')
-                else:
-                    print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}")
-                    print('')
-
-            elif args.level:
-                if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
-                    print_levels(args.level)
-                    print('')
-                else:
-                    print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}")
-                    print('')
-
-        # node commands
-        elif commandList[0] == 'node':
-            args = parser.parse_args(commandList)
-            # print("received as input :")
-            # print(args)
-
-            if args.expand or args.scaleDown:
-                if args.expand == "all" or args.scaleDown == "all":
-                    if args.expand == "all":
-                        expand_all()
-                    else:
-                        scale_down_all()
+                if len(commandList) == 1 or args.all:
+                    print_description()
+                    print_separator()
                     print_levels()
                     print('')
-                else:
-                    if args.expand:
-                        args_id = args.expand
-                    else:
-                        args_id = args.scaleDown
-                    old_id = check_node_get_original_id(args_id)
+
+                elif args.tree:
+                    print_levels()
+                    print('')
+
+                elif args.description:
+                    print_description()
+                    print('')
+
+                elif args.node:
+                    old_id = check_node_get_original_id(args.node)
                     if old_id:
-                        if args.expand:
-                            expand_node(old_id)
-                        else:
-                            scale_down_node(old_id)
                         print(f"{print_node(old_id)}")
                         print('')
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}")
+                        print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}")
                         print('')
+
+                elif args.level:
+                    if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
+                        print_levels(args.level)
+                        print('')
+                    else:
+                        print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}")
+                        print('')
+
+            except:
+                print(
+                    f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!{TerminalColors.ENDC}")
+
+        # node commands
+        elif commandList[0] == 'node':
+            try:
+                args = parser.parse_args(commandList)
+
+                if args.expand or args.scaleDown:
+                    if args.expand == "all" or args.scaleDown == "all":
+                        if args.expand == "all":
+                            expand_all()
+                        else:
+                            scale_down_all()
+                        print_levels()
+                        print('')
+                    else:
+                        if args.expand:
+                            args_id = args.expand
+                        else:
+                            args_id = args.scaleDown
+                        old_id = check_node_get_original_id(args_id)
+                        if old_id:
+                            if args.expand:
+                                expand_node(old_id)
+                            else:
+                                scale_down_node(old_id)
+                            print(f"{print_node(old_id)}")
+                            print('')
+                        else:
+                            print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}")
+                            print('')
+
+            # except argparse.ArgumentError:
+            except:
+                print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!{TerminalColors.ENDC}")
 
         else:
             print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}")
@@ -388,10 +396,6 @@ if __name__ == "__main__":
         #     # args = parser.parse_args(commandList)
         #     # print(args)
         #     break
-
-        # elif commandList[0] == 'scaleDownNode':
-        #     scale_down_node(commandList[1])
-        #     print('')
 
         # elif commandList[0] == 'load':
         #     if os.path.isfile(commandList[1]):
@@ -419,15 +423,13 @@ if __name__ == "__main__":
 # - migliorare il main program che gestisce gli input dalla shell con argparse e definire bene i commandi
 # - check if input one of the recognized commands
 # - standard command: command node -> to check
-# - gestire gli errori di argparse
+# - improve argparse error handling
 
 # - esporta diagramma in un file txt o json
 
 # - stampa un intervallo di linee
 
 # - check 'parentPieceId' order
-
-# - per i comandi usare il dizionario per tradurre i valori dei nodi nelle nuove id assegnate
 
 # carattere spazio - modificarlo nella grammatica
 
