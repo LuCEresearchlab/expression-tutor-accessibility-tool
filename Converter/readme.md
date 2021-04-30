@@ -24,11 +24,15 @@ The following commands are correctly implemented and are working inside the scri
 clear or c
 quit or q
 help or h
-print --all
+print
+print --all 
 print --tree
 print --level [levelNumber]
 print --node [nodeID]
 print --description
-node --expand [nodeID or "all"]
-node --scaleDown [nodeID or "all"]
+print --notConnected or -nc
+node --expand or -ex [nodeID or "all"]
+node --scaleDown or -sd [nodeID or "all"]
+export
+export --json [filename.json]
 ```

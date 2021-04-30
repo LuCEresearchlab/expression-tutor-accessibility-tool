@@ -38,6 +38,7 @@ subparsers = parser.add_subparsers(help='types of print')
 
 print_parser = subparsers.add_parser("print")
 node_parser = subparsers.add_parser("node")
+export_parser = subparsers.add_parser("export")
 
 # print parser commands
 print_parser.add_argument("--all", help="Prints the description and the tree diagram.", action="store_true")
@@ -45,6 +46,7 @@ print_parser.add_argument("--tree", help="Prints the tree diagram.", action="sto
 print_parser.add_argument("--level", help="Prints the node.")
 print_parser.add_argument("--node", help="Prints the node.")
 print_parser.add_argument("--description", help="Prints the description.", action="store_true")
+print_parser.add_argument("--notConnected", "-nc", help="Prints the not connected nodes.", action="store_true")
 
 # node parser commands
 node_parser.add_argument("--expand", "-ex", help="Expands the node.")
@@ -54,20 +56,28 @@ node_parser.add_argument("--create", help="Creates a node.")
 node_parser.add_argument("--modify", help="Modifies a node.")
 node_parser.add_argument("--delete", help="Deletes a node.")
 
+# export parser commands
+export_parser.add_argument("--json", help="Exports the modified tree to .json format.")
+# TODO to implement:
+export_parser.add_argument("--txt", help="Exports the modified tree to .txt format.")
+
 
 # Creates a new file in .tree extension where the current status of the program is saved.
 # if called with an argument it returns name_treediagram.tree, else datetime_treediagram.tree
 def create_new_file(existing_filename=None):
-    x = datetime.datetime.now()
-    date_time_string = (x.strftime("%Y") + x.strftime("%m") + x.strftime("%d") + "_" + x.strftime("%H")
-                        + x.strftime("%M") + x.strftime("%S"))
     if existing_filename:
         new_file_name = existing_filename.split('.')[0] + "_treediagram.tree"
     else:
-        new_file_name = date_time_string + "_treediagram.tree"
+        new_file_name = get_date_time() + "_treediagram.tree"
     f = open(new_file_name, "w")
     f.close()
     return new_file_name
+
+
+def get_date_time():
+    x = datetime.datetime.now()
+    return (x.strftime("%Y") + x.strftime("%m") + x.strftime("%d") + "_" + x.strftime("%H") + x.strftime("%M")
+            + x.strftime("%S"))
 
 
 # given a file loads all the information from the file necessary to run the program.
@@ -137,17 +147,20 @@ def load_file(filename=None):
 # gives some general info for developing purposes
 def dev_print_infos():
     print("-------------------------------------------------------")
-    print("INFO FOR DEVELOPING PURPOSE ONLY:")
+    print("DATABASE AND INFO FOR DEVELOPING PURPOSES:")
     print(f"Number of nodes: {node_number}")
     print(f"Number of edges: {edge_number}")
     print(f"Root node: {selected_root_node}")
     print(f"Node connector: {node_connector}")
-    print("\n Nodes:")
+    print("\n Dictionary of nodes:")
     for node in node_dictionary:
         print(f" {node} - {node_dictionary[node]}")
-    print("\n Edges:")
+    print("\n Dictionary of edges:")
     for edge in edge_dictionary:
         print(f" {edge} - {edge_dictionary[edge]}")
+    print("\n Tree structure:")
+    for level in node_levels:
+        print(f" {level} - {node_levels[level]}")
     print("-------------------------------------------------------\n")
 
 
@@ -193,17 +206,51 @@ def populate_levels(root_node):
                 new_id_counter += 1
 
     else:
+        # if root node not specified but nodes exist, all the nodes are categorized as not connected and all the
+        # connections are deleted
         if len(node_dictionary) > 0:
             node_levels["not_connected"] = []
             new_id_counter = 0
             for node in node_dictionary:
                 node_dictionary[node].update({'new_id': new_id_counter, 'value': 'Not connected'})
                 node_levels["not_connected"].append(node)
-
-            # root node (None) tutti i nodi devono essere not_connected - fatto
-            # TODO tutte le connessioni devono essere cancellate
+            delete_connection("all")
 
     return max_found_depth, node_levels
+
+
+# exports the tree diagram to json format so that it can be imported to the expression tutor
+# if it is called with an argument filename he keeps that argument as name, else he creates one.
+# the file format is the same as the input json files that we read.
+def export(export_filename):
+    if not export_filename:
+        export_filename = get_date_time() + "_treediagram.json"
+
+    # restructure the node dictionary, so that it contains the same fields as the expression tutor json file.
+    node_export_dictionary = {}
+    for node in node_dictionary:
+        node_export_dictionary[node] = {'pieces': node_dictionary[node]['pieces'],
+                                        'x': 0,
+                                        'y': 0,
+                                        'type': node_dictionary[node]['type'],
+                                        'value': node_dictionary[node]['value'],
+                                        'isFinal': False}
+
+    data = {"nodes": node_export_dictionary,
+            "edges": edge_dictionary,
+            "selectedRootNode": selected_root_node,
+            "nodeConnector": node_connector}
+
+    with open(export_filename, 'w') as outfile:
+        json.dump(data, outfile, indent=2)
+
+    outfile.close()
+    return export_filename
+
+
+def delete_connection(connection):
+    if connection == "all":
+        edge_dictionary.clear()
 
 
 def print_description():
@@ -320,8 +367,10 @@ def print_levels(selected_level=False):
         for level in node_levels:
             if level != "not_connected":
                 print(f"@{level} {print_level(level)}")
-        level = "not_connected"
-        print(f"@{level} {print_level(level)}")
+
+        if "not_connected" in node_levels:
+            level = "not_connected"
+            print(f"@{level} {print_level(level)}")
 
 
 def clear():
@@ -371,16 +420,12 @@ if __name__ == "__main__":
         max_depth, node_levels = populate_levels(selected_root_node)
 
         print(f"loaded file: {read_file.filename}")
-        print(f"created file: {read_file.new_filename}\n")
+        print(f"created file: {read_file.new_filename}")
+
     except ValueError:
         print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files!{TerminalColors.ENDC}")
 
-    # print("Database and Info:")
-    print(f"Tree structure: {node_levels} \n")
-    print(f"Dictionary of nodes: {node_dictionary}")
-    print(f"Dictionary of edges: {edge_dictionary}")
-    # dev_print_infos()
-
+    dev_print_infos()
     print_description()
     print_separator()
     print_levels()
@@ -437,6 +482,10 @@ if __name__ == "__main__":
                         print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}")
                         print('')
 
+                elif args.notConnected:
+                    print_levels("not_connected")
+                    print('')
+
             except:
                 print(
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
@@ -477,6 +526,33 @@ if __name__ == "__main__":
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
                     f"{TerminalColors.ENDC}")
 
+        # export commands
+        elif commandList[0] == 'export':
+            try:
+                args = parser.parse_args(commandList)
+
+                # if command is export or export --json [filename.json]
+                if len(commandList) == 1 or args.json:
+                    if args.json:
+                        if args.json.lower().endswith('.json'):
+                            exported_file = export(args.json)
+                            print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
+                                  f"{TerminalColors.ENDC}")
+                            print('')
+                        else:
+                            print(
+                                f"{TerminalColors.FAIL}Warning: The filename must be of the type filename.json!"
+                                f"{TerminalColors.ENDC}")
+                    else:
+                        exported_file = export(None)
+                        print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
+                              f"{TerminalColors.ENDC}")
+                        print('')
+
+            except:
+                print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
+                      f"{TerminalColors.ENDC}")
+
         else:
             print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}")
             print('')
@@ -514,7 +590,7 @@ if __name__ == "__main__":
 # - standard command: command node -> to check
 # - improve argparse error handling
 
-# - esporta diagramma in un file txt o json
+# - esporta diagramma in un file txt
 
 # - stampa un intervallo di linee
 
@@ -529,15 +605,16 @@ if __name__ == "__main__":
 # 2 connect nodeID1 nodeID2
 # -> se fattibile decidere quale parentPieceId
 
-# - implementare node deletion
-
 # - indicare parentPieceId
 # {2:1;6;null;"# + #";noType;noValue} 2:1 per indicare parentPieceId?
 
 # - update value of a node
 # node n0 label:"newLabel"  o  node n0 -l "newLabel"
 
-# TODO disegnare albero da 0 senza dare un file come input - DEBUGGARE cosa non va
+# TODO capire cosa mettere nel file .tree e quando aggiornarlo (dopo ogni modifica)
 
-# TODO implement command : print -nc o --notConnected
+# TODO delete_connection nodeID-nodeID, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
+#  fare nodi not connected
 
+# TODO delete_node nodeID, cancellare nodo, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
+#  fare nodi not connected, se cancello root, tutti i nodi non connected
