@@ -20,13 +20,10 @@ class TerminalColors:
 
 # defines the file struct that is used to parse a file and return a struct of that file.
 class File:
-    def __init__(self, filename, new_filename, data_input, node_number, edge_number, root_node, node_connector,
-                 node_structure):
+    def __init__(self, filename, new_filename, node_number, root_node, node_connector, node_structure):
         self.filename = filename
         self.new_filename = new_filename
-        self.data_input = data_input
         self.node_number = node_number
-        self.edge_number = edge_number
         self.root_node = root_node
         self.node_connector = node_connector
         self.node_structure = node_structure
@@ -85,7 +82,7 @@ def load_file(filename=None):
     edge_dictionary = {}
     node_dictionary = {}
 
-    # TODO - option if file is .tree how to parse it?
+    # TODO - option if file is .tree parse it for recover last state (json parser)
 
     if len(sys.argv) == 2:
         if sys.argv[1].lower().endswith('.json'):
@@ -98,7 +95,6 @@ def load_file(filename=None):
                 input_data = json.loads(f.read())
 
             file_node_number = len(input_data['nodes'])
-            file_edge_number = len(input_data['edges'])
 
             # check if the root node exists
             file_selected_root_node = None
@@ -131,14 +127,12 @@ def load_file(filename=None):
         filename = None
 
         file_node_number = 0
-        file_edge_number = 0
         file_selected_root_node = None
         file_node_connector = "#"
-        input_data = None
 
     file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
 
-    new_file = File(filename, new_filename, input_data, file_node_number, file_edge_number, file_selected_root_node,
+    new_file = File(filename, new_filename, file_node_number, file_selected_root_node,
                     file_node_connector, file_node_structure)
 
     return new_file, edge_dictionary, node_dictionary
@@ -149,7 +143,7 @@ def dev_print_infos():
     print("-------------------------------------------------------")
     print("DATABASE AND INFO FOR DEVELOPING PURPOSES:")
     print(f"Number of nodes: {node_number}")
-    print(f"Number of edges: {edge_number}")
+    print(f"Number of edges: {len(edge_dictionary)}")
     print(f"Root node: {selected_root_node}")
     print(f"Node connector: {node_connector}")
     print("\n Dictionary of nodes:")
@@ -246,6 +240,27 @@ def export(export_filename):
 
     outfile.close()
     return export_filename
+
+
+# called always after a change in the diagram, copies the actual state of the tree diagram in the .tree file.
+def update_tree_file():
+    tree_variables = {'originalFileName': read_file.filename,
+                      'selectedRootNode': selected_root_node,
+                      'nodeConnector': node_connector,
+                      'nodeNumber': node_number,
+                      'nodeStructure': node_structure,
+                      'maxDepth': max_depth}
+
+    data = {"nodes": node_dictionary,
+            "edges": edge_dictionary,
+            "treeStructure": node_levels,
+            "variables": tree_variables}
+
+    with open(read_file.new_filename, 'w') as outfile:
+        json.dump(data, outfile, indent=2)
+
+    outfile.close()
+    return
 
 
 def delete_connection(connection):
@@ -411,13 +426,12 @@ if __name__ == "__main__":
 
     try:
         read_file, edge_dictionary, node_dictionary = load_file()
-        data_in = read_file.data_input
         node_number = read_file.node_number
-        edge_number = read_file.edge_number
         selected_root_node = read_file.root_node
         node_connector = read_file.node_connector
         node_structure = read_file.node_structure
         max_depth, node_levels = populate_levels(selected_root_node)
+        update_tree_file()
 
         print(f"loaded file: {read_file.filename}")
         print(f"created file: {read_file.new_filename}")
@@ -504,6 +518,7 @@ if __name__ == "__main__":
                             scale_down_all()
                         print_levels()
                         print('')
+                        update_tree_file()
                     else:
                         if args.expand:
                             args_id = args.expand
@@ -517,6 +532,7 @@ if __name__ == "__main__":
                                 scale_down_node(old_id)
                             print(f"{print_node(old_id)}")
                             print('')
+                            update_tree_file()
                         else:
                             print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}")
                             print('')
@@ -567,7 +583,6 @@ if __name__ == "__main__":
         #         read_file = load_file(commandList[1])
         #         data_in = read_file.data_input
         #         node_number = read_file.node_number
-        #         edge_number = read_file.edge_number
         #         selected_root_node = read_file.root_node
         #         node_connector = read_file.node_connector
         #         node_structure = read_file.node_structure
@@ -611,7 +626,7 @@ if __name__ == "__main__":
 # - update value of a node
 # node n0 label:"newLabel"  o  node n0 -l "newLabel"
 
-# TODO capire cosa mettere nel file .tree e quando aggiornarlo (dopo ogni modifica)
+# TODO parsare file .tree
 
 # TODO delete_connection nodeID-nodeID, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
 #  fare nodi not connected
