@@ -20,13 +20,13 @@ class TerminalColors:
 
 # defines the file struct that is used to parse a file and return a struct of that file.
 class File:
-    def __init__(self, filename, new_filename, node_number, root_node, node_connector, node_structure):
+    def __init__(self, filename, new_filename, root_node, node_connector, node_structure, last_node):
         self.filename = filename
         self.new_filename = new_filename
-        self.node_number = node_number
         self.root_node = root_node
         self.node_connector = node_connector
         self.node_structure = node_structure
+        self.last_node = last_node
 
 
 # ArgumentParser commands
@@ -49,7 +49,10 @@ print_parser.add_argument("--notConnected", "-nc", help="Prints the not connecte
 node_parser.add_argument("--expand", "-ex", help="Expands the node.")
 node_parser.add_argument("--scaleDown", "-sd", help="Scales down the node.")
 # TODO to implement:
-node_parser.add_argument("--create", help="Creates a node.")
+node_parser.add_argument("--create", help="Creates a node.", action="store_true")
+node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
+node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
+
 node_parser.add_argument("--modify", help="Modifies a node.")
 node_parser.add_argument("--delete", help="Deletes a node.")
 
@@ -81,6 +84,7 @@ def get_date_time():
 def load_file(filename=None):
     edge_dictionary = {}
     node_dictionary = {}
+    last_node_created = '00' #00 indicates no nodes
 
     # TODO - option if file is .tree parse it for recover last state (json parser)
 
@@ -93,8 +97,6 @@ def load_file(filename=None):
             # for the edges
             with open(filename, 'r') as f:
                 input_data = json.loads(f.read())
-
-            file_node_number = len(input_data['nodes'])
 
             # check if the root node exists
             file_selected_root_node = None
@@ -115,6 +117,7 @@ def load_file(filename=None):
                                          'pieces': input_data['nodes'][node]['pieces'],
                                          'type': input_data['nodes'][node]['type'],
                                          'value': input_data['nodes'][node]['value']}
+                last_node_created = node
             f.close()
 
         # raise an error if file is not json file
@@ -126,14 +129,13 @@ def load_file(filename=None):
         new_filename = create_new_file()
         filename = None
 
-        file_node_number = 0
         file_selected_root_node = None
         file_node_connector = "#"
 
     file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
 
-    new_file = File(filename, new_filename, file_node_number, file_selected_root_node,
-                    file_node_connector, file_node_structure)
+    new_file = File(filename, new_filename, file_selected_root_node,
+                    file_node_connector, file_node_structure, last_node_created)
 
     return new_file, edge_dictionary, node_dictionary
 
@@ -142,7 +144,7 @@ def load_file(filename=None):
 def dev_print_infos():
     print("-------------------------------------------------------")
     print("DATABASE AND INFO FOR DEVELOPING PURPOSES:")
-    print(f"Number of nodes: {node_number}")
+    print(f"Number of nodes: {len(node_dictionary)}")
     print(f"Number of edges: {len(edge_dictionary)}")
     print(f"Root node: {selected_root_node}")
     print(f"Node connector: {node_connector}")
@@ -177,7 +179,7 @@ def populate_levels(root_node):
         actual_level = "root"
         node_counter += 1
 
-        while node_counter < node_number:
+        while node_counter < len(node_dictionary):
             for actual_node in node_levels[actual_level]:
                 next_level = 1 if actual_level == "root" else actual_level + 1
 
@@ -247,9 +249,9 @@ def update_tree_file():
     tree_variables = {'originalFileName': read_file.filename,
                       'selectedRootNode': selected_root_node,
                       'nodeConnector': node_connector,
-                      'nodeNumber': node_number,
                       'nodeStructure': node_structure,
-                      'maxDepth': max_depth}
+                      'maxDepth': max_depth,
+                      'LastCreatedNodeID': last_node_created}
 
     data = {"nodes": node_dictionary,
             "edges": edge_dictionary,
@@ -269,12 +271,26 @@ def delete_connection(connection):
 
 
 def print_description():
-    print(f'type: treeDiagram, nodes: {node_number}, maxDepth: {max_depth}, nodeStructure: {node_structure}, '
+    print(f'type: treeDiagram, nodes: {len(node_dictionary)}, maxDepth: {max_depth}, nodeStructure: {node_structure}, '
           f'connector: "{node_connector}"')
 
 
 def print_separator(number_of_separators=10, separator="#"):
     print(separator * number_of_separators)
+
+
+def create_node(label, node_type):
+    if last_node_created == '00':
+        node_key = 'n0'
+    else:
+        node_key = 'n' + str(int(last_node_created[1:])+1)
+
+    node_dictionary[node_key] = {'new_id': None,
+                                 'expanded': False,
+                                 'pieces': label,
+                                 'type': node_type,
+                                 'value': "Not connected"}
+    return node_key
 
 
 # change expanded value to true
@@ -408,7 +424,7 @@ def check_node_get_original_id(node_id_to_test):
                 return node
 
     if node_id_to_test.isnumeric():
-        if 0 <= int(node_id_to_test) < node_number:
+        if 0 <= int(node_id_to_test) < len(node_dictionary):
             for node in node_dictionary:
                 if node_dictionary[node]['new_id'] == int(node_id_to_test):
                     return node
@@ -426,10 +442,10 @@ if __name__ == "__main__":
 
     try:
         read_file, edge_dictionary, node_dictionary = load_file()
-        node_number = read_file.node_number
         selected_root_node = read_file.root_node
         node_connector = read_file.node_connector
         node_structure = read_file.node_structure
+        last_node_created = read_file.last_node
         max_depth, node_levels = populate_levels(selected_root_node)
         update_tree_file()
 
@@ -449,18 +465,22 @@ if __name__ == "__main__":
         command = get_string("Insert command: ")
         commandList = command.strip().split(" ")
 
-        # helper commands
+        # HELPER commands
         if commandList[0] in ['clear', 'c']:
             clear()
 
         elif commandList[0] in ['quit', 'q']:
             break
 
+        # returns the list of existing commands
         elif commandList[0] in ['help', 'h']:
-            print('here should be the list of possible commands')
+            print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all '
+                  f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
+                  f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
+                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nexport \nexport --json[filename.json]')
             print('')
 
-        # print commands
+        # PRINT commands
         elif commandList[0] == 'print':
             try:
                 args = parser.parse_args(commandList)
@@ -505,7 +525,7 @@ if __name__ == "__main__":
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
                     f"{TerminalColors.ENDC}")
 
-        # node commands
+        # NODE commands
         elif commandList[0] == 'node':
             try:
                 args = parser.parse_args(commandList)
@@ -537,12 +557,32 @@ if __name__ == "__main__":
                             print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}")
                             print('')
 
+                elif args.create:
+                    if args.label:
+                        new_label = args.label
+                    else:
+                        new_label = ""
+
+                    if args.type:
+                        new_node_type = args.type
+                    else:
+                        new_node_type = ""
+
+                    new_node = create_node(new_label, new_node_type)
+                    last_node_created = new_node
+                    max_depth, node_levels = populate_levels(selected_root_node)
+                    update_tree_file()
+                    print(f"{TerminalColors.OKGREEN}Created node: {print_node(new_node)}"
+                          f"{TerminalColors.ENDC}\n")
+
+                    # TODO fix bug nella creazione delle nuove id...
+
             except:
                 print(
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
                     f"{TerminalColors.ENDC}")
 
-        # export commands
+        # EXPORT commands
         elif commandList[0] == 'export':
             try:
                 args = parser.parse_args(commandList)
@@ -582,7 +622,6 @@ if __name__ == "__main__":
         #     if os.path.isfile(commandList[1]):
         #         read_file = load_file(commandList[1])
         #         data_in = read_file.data_input
-        #         node_number = read_file.node_number
         #         selected_root_node = read_file.root_node
         #         node_connector = read_file.node_connector
         #         node_structure = read_file.node_structure
@@ -633,3 +672,5 @@ if __name__ == "__main__":
 
 # TODO delete_node nodeID, cancellare nodo, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
 #  fare nodi not connected, se cancello root, tutti i nodi non connected
+
+# TODO fixare create node
