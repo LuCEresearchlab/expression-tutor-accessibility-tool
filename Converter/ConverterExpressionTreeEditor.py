@@ -20,13 +20,17 @@ class TerminalColors:
 
 # defines the file struct that is used to parse a file and return a struct of that file.
 class File:
-    def __init__(self, filename, new_filename, root_node, node_connector, node_structure, last_node):
+    def __init__(self, filename, new_filename, root_node, node_connector, node_structure, last_node, max_depth,
+                 treeFileBoolean, tree_structure):
         self.filename = filename
         self.new_filename = new_filename
         self.root_node = root_node
         self.node_connector = node_connector
         self.node_structure = node_structure
         self.last_node = last_node
+        self.max_depth = max_depth
+        self.treeFileBoolean = treeFileBoolean
+        self.tree_structure = tree_structure
 
 
 # ArgumentParser commands
@@ -48,11 +52,11 @@ print_parser.add_argument("--notConnected", "-nc", help="Prints the not connecte
 # node parser commands
 node_parser.add_argument("--expand", "-ex", help="Expands the node.")
 node_parser.add_argument("--scaleDown", "-sd", help="Scales down the node.")
-# TODO to implement:
 node_parser.add_argument("--create", help="Creates a node.", action="store_true")
 node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
 node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
 
+# TODO to implement:
 node_parser.add_argument("--modify", help="Modifies a node.")
 node_parser.add_argument("--delete", help="Deletes a node.")
 
@@ -84,9 +88,11 @@ def get_date_time():
 def load_file(filename=None):
     edge_dictionary = {}
     node_dictionary = {}
-    last_node_created = '00' #00 indicates no nodes
-
-    # TODO - option if file is .tree parse it for recover last state (json parser)
+    node_levels = {}
+    last_node_created = '00'  # 00 indicates no nodes
+    file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
+    tree_boolean = False
+    file_max_depth = 0
 
     if len(sys.argv) == 2:
         if sys.argv[1].lower().endswith('.json'):
@@ -120,6 +126,48 @@ def load_file(filename=None):
                 last_node_created = node
             f.close()
 
+        # if file is .tree parse it for recover last state (with a json parser)
+        elif sys.argv[1].lower().endswith('.tree'):
+            new_filename = sys.argv[1]
+            tree_boolean = True
+
+            # read the input of the .tree file (structured like a json file)
+            with open(new_filename, 'r') as f:
+                input_data = json.loads(f.read())
+
+            # read variables
+            file_node_connector = input_data['variables']['nodeConnector']
+            filename = input_data['variables']['originalFileName']
+            last_node_created = input_data['variables']['LastCreatedNodeID']
+            file_node_structure = input_data['variables']['nodeStructure']
+            file_max_depth = input_data['variables']['maxDepth']
+
+            # check if the root node exists and register value
+            file_selected_root_node = None
+            for node in (input_data['nodes']):
+                if input_data['variables']['selectedRootNode'] == node:
+                    file_selected_root_node = input_data['variables']['selectedRootNode']
+
+            # read edges
+            for edge in input_data['edges']:
+                edge_dictionary[edge] = {'parentNodeId': input_data['edges'][edge]['parentNodeId'],
+                                         'childNodeId': input_data['edges'][edge]['childNodeId'],
+                                         'parentPieceId': input_data['edges'][edge]['parentPieceId']}
+
+            # read nodes
+            for node in input_data['nodes']:
+                node_dictionary[node] = {'new_id': input_data['nodes'][node]['new_id'],
+                                         'expanded': input_data['nodes'][node]['expanded'],
+                                         'pieces': input_data['nodes'][node]['pieces'],
+                                         'type': input_data['nodes'][node]['type'],
+                                         'value': input_data['nodes'][node]['value']}
+
+            # read tree structure
+            for level in input_data['treeStructure']:
+                node_levels[level] = input_data['treeStructure'][level]
+
+            f.close()
+
         # raise an error if file is not json file
         else:
             raise ValueError
@@ -132,10 +180,8 @@ def load_file(filename=None):
         file_selected_root_node = None
         file_node_connector = "#"
 
-    file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
-
-    new_file = File(filename, new_filename, file_selected_root_node,
-                    file_node_connector, file_node_structure, last_node_created)
+    new_file = File(filename, new_filename, file_selected_root_node, file_node_connector, file_node_structure,
+                    last_node_created, file_max_depth, tree_boolean, node_levels)
 
     return new_file, edge_dictionary, node_dictionary
 
@@ -279,11 +325,12 @@ def print_separator(number_of_separators=10, separator="#"):
     print(separator * number_of_separators)
 
 
+# creates a new node, standard value not connected, label and node type can be specified
 def create_node(label, node_type):
     if last_node_created == '00':
         node_key = 'n0'
     else:
-        node_key = 'n' + str(int(last_node_created[1:])+1)
+        node_key = 'n' + str(int(last_node_created[1:]) + 1)
 
     node_dictionary[node_key] = {'new_id': None,
                                  'expanded': False,
@@ -298,16 +345,18 @@ def expand_node(node_id):
     node_dictionary[node_id].update({"expanded": True})
 
 
+# expands all the nodes in the tree diagram
 def expand_all():
     for node_id in node_dictionary:
         node_dictionary[node_id].update({"expanded": True})
 
 
-# change expanded value to true
+# change expanded value to false
 def scale_down_node(node_id):
     node_dictionary[node_id].update({"expanded": False})
 
 
+# scales down all the nodes in the tree diagram
 def scale_down_all():
     for node_id in node_dictionary:
         node_dictionary[node_id].update({"expanded": False})
@@ -446,8 +495,12 @@ if __name__ == "__main__":
         node_connector = read_file.node_connector
         node_structure = read_file.node_structure
         last_node_created = read_file.last_node
-        max_depth, node_levels = populate_levels(selected_root_node)
-        update_tree_file()
+        if read_file.treeFileBoolean:
+            max_depth = read_file.max_depth
+            node_levels = read_file.tree_structure
+        else:
+            max_depth, node_levels = populate_levels(selected_root_node)
+            update_tree_file()
 
         print(f"loaded file: {read_file.filename}")
         print(f"created file: {read_file.new_filename}")
@@ -477,7 +530,8 @@ if __name__ == "__main__":
             print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all '
                   f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
                   f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
-                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nexport \nexport --json[filename.json]')
+                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --create --l [label] --t [type] \nexport '
+                  f'\nexport --json[filename.json]')
             print('')
 
         # PRINT commands
@@ -575,8 +629,6 @@ if __name__ == "__main__":
                     print(f"{TerminalColors.OKGREEN}Created node: {print_node(new_node)}"
                           f"{TerminalColors.ENDC}\n")
 
-                    # TODO fix bug nella creazione delle nuove id...
-
             except:
                 print(
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
@@ -672,5 +724,3 @@ if __name__ == "__main__":
 
 # TODO delete_node nodeID, cancellare nodo, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
 #  fare nodi not connected, se cancello root, tutti i nodi non connected
-
-# TODO fixare create node
