@@ -717,8 +717,6 @@ if __name__ == "__main__":
 # - update value of a node
 # node n0 label:"newLabel"  o  node n0 -l "newLabel"
 
-# TODO parsare file .tree
-
 # TODO delete_connection nodeID-nodeID, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
 #  fare nodi not connected
 
