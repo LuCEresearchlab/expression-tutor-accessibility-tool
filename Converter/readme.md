@@ -36,8 +36,9 @@ print --description
 print --notConnected or -nc
 node --expand or -ex [nodeID or "all"]
 node --scaleDown or -sd [nodeID or "all"]
-node --create --l [label] --t [type]
+node --create --label or -l [label] --type or -t [type]
 node --connnect [parentNodeID]-[childNodeID]
+node --modify [nodeID] --label or -l [label] --type or -t [type]
 node --root [nodeID]
 export
 export --json [filename.json]

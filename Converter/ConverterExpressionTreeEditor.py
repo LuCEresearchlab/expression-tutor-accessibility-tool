@@ -58,10 +58,11 @@ node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
 node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
 node_parser.add_argument("--connect", help="Creates an edge between two nodes.")
 node_parser.add_argument("--root", help="Sets a new root node in the diagram.")
+node_parser.add_argument("--modify", help="Modifies a node.")
 
 # TODO to implement:
-node_parser.add_argument("--modify", help="Modifies a node.")
 node_parser.add_argument("--delete", help="Deletes a node.")
+node_parser.add_argument("--disconnect", help="Deletes an edge between two nodes.")
 
 # export parser commands
 export_parser.add_argument("--json", help="Exports the modified tree to .json format.")
@@ -210,6 +211,7 @@ def dev_print_infos():
 # TODO descrizione
 def populate_levels(root_node):
     max_found_depth = 0
+    node_levels.clear()
 
     if root_node:
         node_counter = 0
@@ -313,11 +315,13 @@ def update_tree_file():
     return
 
 
+# prints the description of the tree diagram
 def print_description():
     print(f'type: treeDiagram, nodes: {len(node_dictionary)}, maxDepth: {max_depth}, nodeStructure: {node_structure}, '
           f'connector: "{node_connector}"')
 
 
+# prints the separator between the description and the tree diagram
 def print_separator(number_of_separators=10, separator="#"):
     print(separator * number_of_separators)
 
@@ -363,6 +367,7 @@ def connect_nodes(parent_node, child_node):
     return edge_key
 
 
+# TODO finish the function
 def delete_connection(connection):
     if connection == "all":
         edge_dictionary.clear()
@@ -419,28 +424,32 @@ def get_children_nodes(node_id):
 
 # Convert list to string
 def list_to_string(list_of_elements):
-    new_string = '"' + (' '.join([str(elem) for elem in list_of_elements])) + '"'
+    new_string = '"' + (''.join([str(elem) for elem in list_of_elements])) + '"'
     return new_string
 
 
+# returns the label of a node
 def get_label(node_id):
     if node_dictionary[node_id]['pieces'] == '':
         return 'noLabel'
     return list_to_string(node_dictionary[node_id]['pieces'])
 
 
+# returns the type of a node
 def get_type(node_id):
     if node_dictionary[node_id]['type'] == '':
         return 'noType'
     return node_dictionary[node_id]['type']
 
 
+# returns value of a node
 def get_value(node_id):
     if node_dictionary[node_id]['value'] == '':
         return 'noValue'
     return node_dictionary[node_id]['value']
 
 
+# prints a node, expanded or not
 def print_node(node_id):
     if node_dictionary[node_id]['expanded']:
         # return formatted expanded node
@@ -460,6 +469,7 @@ def print_node(node_id):
                 str(get_value(node_id)) + '}')
 
 
+# prints the node present in a level
 def print_level(level):
     string = ""
     for node in node_levels[level]:
@@ -467,6 +477,7 @@ def print_level(level):
     return string
 
 
+# prints the level indicator and the nodes present in a level
 def print_levels(selected_level=False):
     if selected_level:
         if selected_level in ["root", "not_connected"]:
@@ -483,6 +494,7 @@ def print_levels(selected_level=False):
             print(f"@{level} {print_level(level)}")
 
 
+# clears the terminal
 def clear():
     _ = os.system('clear')
 
@@ -563,8 +575,8 @@ if __name__ == "__main__":
             print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all '
                   f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
                   f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
-                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --create --l [label] --t [type] '
-                  f'\nnode --connnect [parentNodeID]-[childNodeID] \nnode --root [nodeID] \nexport '
+                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --connnect [parentNodeID]-[childNodeID] '
+                  f'\nnode --modify [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] \nexport '
                   f'\nexport --json[filename.json]')
             print('')
 
@@ -642,6 +654,7 @@ if __name__ == "__main__":
                             print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}"
                                   f"\n")
 
+                # creates a new node
                 elif args.create:
                     if args.label:
                         new_label = args.label
@@ -659,6 +672,26 @@ if __name__ == "__main__":
                     update_tree_file()
                     print(f"{TerminalColors.OKGREEN}Created node: {print_node(new_node)}"
                           f"{TerminalColors.ENDC}\n")
+
+                # modifies a node with parameters label or type
+                elif args.modify:
+                    found_id = check_node_get_original_id(args.modify)
+                    if found_id:
+                        if not args.label and not args.type:
+                            print(f"{TerminalColors.FAIL}Warning: To modify the node {args.modify} the script needs "
+                                  f"one or two arguments!{TerminalColors.ENDC}\n")
+                        else:
+                            if args.label:
+                                node_dictionary[found_id].update({"pieces": args.label})
+                            if args.type:
+                                node_dictionary[found_id].update({"type": args.type})
+                            max_depth, node_levels = populate_levels(selected_root_node)
+                            update_tree_file()
+                            print(f"{TerminalColors.OKGREEN}Modified node: {print_node(found_id)}"
+                                  f"{TerminalColors.ENDC}\n")
+                    else:
+                        print(f"{TerminalColors.FAIL}Warning: Node {args.modify} does not exist!{TerminalColors.ENDC}"
+                              f"\n")
 
                 # connects a node that is already in the diagram with a node that is not connected.
                 elif args.connect:
@@ -761,9 +794,6 @@ if __name__ == "__main__":
 # 1 create -l label -v value -t type
 # 2 connect nodeID1 nodeID2
 # -> se fattibile decidere quale parentPieceId
-
-# - update value of a node
-# node n0 label:"newLabel"  o  node n0 -l "newLabel"
 
 # - check 'parentPieceId' order
 
