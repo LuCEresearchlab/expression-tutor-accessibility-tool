@@ -20,14 +20,15 @@ class TerminalColors:
 
 # defines the file struct that is used to parse a file and return a struct of that file.
 class File:
-    def __init__(self, filename, new_filename, root_node, node_connector, node_structure, last_node, max_depth,
-                 treeFileBoolean, tree_structure):
+    def __init__(self, filename, new_filename, root_node, node_connector, node_structure, last_node, last_edge,
+                 max_depth, treeFileBoolean, tree_structure):
         self.filename = filename
         self.new_filename = new_filename
         self.root_node = root_node
         self.node_connector = node_connector
         self.node_structure = node_structure
         self.last_node = last_node
+        self.last_edge = last_edge
         self.max_depth = max_depth
         self.treeFileBoolean = treeFileBoolean
         self.tree_structure = tree_structure
@@ -55,6 +56,7 @@ node_parser.add_argument("--scaleDown", "-sd", help="Scales down the node.")
 node_parser.add_argument("--create", help="Creates a node.", action="store_true")
 node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
 node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
+node_parser.add_argument("--connect", help="Creates an edge between two nodes.")
 
 # TODO to implement:
 node_parser.add_argument("--modify", help="Modifies a node.")
@@ -90,6 +92,7 @@ def load_file(filename=None):
     node_dictionary = {}
     node_levels = {}
     last_node_created = '00'  # 00 indicates no nodes
+    last_edge_created = '00'  # 00 indicates no edges
     file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
     tree_boolean = False
     file_max_depth = 0
@@ -116,6 +119,7 @@ def load_file(filename=None):
                 edge_dictionary[edge] = {'parentNodeId': input_data['edges'][edge]['parentNodeId'],
                                          'childNodeId': input_data['edges'][edge]['childNodeId'],
                                          'parentPieceId': input_data['edges'][edge]['parentPieceId']}
+                last_edge_created = edge
 
             for node in (input_data['nodes']):
                 node_dictionary[node] = {'new_id': None,
@@ -139,6 +143,7 @@ def load_file(filename=None):
             file_node_connector = input_data['variables']['nodeConnector']
             filename = input_data['variables']['originalFileName']
             last_node_created = input_data['variables']['LastCreatedNodeID']
+            last_edge_created = input_data['variables']['LastCreatedEdgeID']
             file_node_structure = input_data['variables']['nodeStructure']
             file_max_depth = input_data['variables']['maxDepth']
 
@@ -181,7 +186,7 @@ def load_file(filename=None):
         file_node_connector = "#"
 
     new_file = File(filename, new_filename, file_selected_root_node, file_node_connector, file_node_structure,
-                    last_node_created, file_max_depth, tree_boolean, node_levels)
+                    last_node_created, last_edge_created, file_max_depth, tree_boolean, node_levels)
 
     return new_file, edge_dictionary, node_dictionary
 
@@ -297,7 +302,8 @@ def update_tree_file():
                       'nodeConnector': node_connector,
                       'nodeStructure': node_structure,
                       'maxDepth': max_depth,
-                      'LastCreatedNodeID': last_node_created}
+                      'LastCreatedNodeID': last_node_created,
+                      'LastCreatedEdgeID': last_edge_created}
 
     data = {"nodes": node_dictionary,
             "edges": edge_dictionary,
@@ -309,11 +315,6 @@ def update_tree_file():
 
     outfile.close()
     return
-
-
-def delete_connection(connection):
-    if connection == "all":
-        edge_dictionary.clear()
 
 
 def print_description():
@@ -338,6 +339,27 @@ def create_node(label, node_type):
                                  'type': node_type,
                                  'value': "Not connected"}
     return node_key
+
+
+# connects a node that is already in the diagram (parent node) with a node that is not connected (child node).
+def connect_nodes(parent_node, child_node):
+    if last_edge_created == '00':
+        edge_key = 'e0'
+    else:
+        edge_key = 'e' + str(int(last_edge_created[1:]) + 1)
+
+    edge_dictionary[edge_key] = {'parentNodeId': parent_node,
+                                 'childNodeId': child_node,
+                                 'parentPieceId': 0}
+
+    node_dictionary[child_node].update({"value": ""})
+    return edge_key
+
+
+def delete_connection(connection):
+    if connection == "all":
+        edge_dictionary.clear()
+        # TODO set last_edge_created = '00'
 
 
 # change expanded value to true
@@ -495,6 +517,7 @@ if __name__ == "__main__":
         node_connector = read_file.node_connector
         node_structure = read_file.node_structure
         last_node_created = read_file.last_node
+        last_edge_created = read_file.last_edge
         if read_file.treeFileBoolean:
             max_depth = read_file.max_depth
             node_levels = read_file.tree_structure
@@ -508,7 +531,7 @@ if __name__ == "__main__":
     except ValueError:
         print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files!{TerminalColors.ENDC}")
 
-    dev_print_infos()
+    # dev_print_infos()
     print_description()
     print_separator()
     print_levels()
@@ -530,8 +553,8 @@ if __name__ == "__main__":
             print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all '
                   f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
                   f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
-                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --create --l [label] --t [type] \nexport '
-                  f'\nexport --json[filename.json]')
+                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --create --l [label] --t [type] '
+                  f'\nnode --connnect [parentNodeID]-[childNodeID] \nexport \nexport --json[filename.json]')
             print('')
 
         # PRINT commands
@@ -556,19 +579,17 @@ if __name__ == "__main__":
                 elif args.node:
                     old_id = check_node_get_original_id(args.node)
                     if old_id:
-                        print(f"{print_node(old_id)}")
-                        print('')
+                        print(f"{print_node(old_id)}\n")
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}")
-                        print('')
+                        print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}\n")
 
                 elif args.level:
                     if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
                         print_levels(args.level)
                         print('')
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}")
-                        print('')
+                        print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}"
+                              f"\n")
 
                 elif args.notConnected:
                     print_levels("not_connected")
@@ -577,7 +598,7 @@ if __name__ == "__main__":
             except:
                 print(
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
-                    f"{TerminalColors.ENDC}")
+                    f"{TerminalColors.ENDC}\n")
 
         # NODE commands
         elif commandList[0] == 'node':
@@ -604,12 +625,11 @@ if __name__ == "__main__":
                                 expand_node(old_id)
                             else:
                                 scale_down_node(old_id)
-                            print(f"{print_node(old_id)}")
-                            print('')
+                            print(f"{print_node(old_id)}\n")
                             update_tree_file()
                         else:
-                            print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}")
-                            print('')
+                            print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}"
+                                  f"\n")
 
                 elif args.create:
                     if args.label:
@@ -629,10 +649,31 @@ if __name__ == "__main__":
                     print(f"{TerminalColors.OKGREEN}Created node: {print_node(new_node)}"
                           f"{TerminalColors.ENDC}\n")
 
+                # connects a node that is already in the diagram with a node that is not connected.
+                elif args.connect:
+                    parsed_arguments = args.connect.split("-")
+                    if len(parsed_arguments) == 2:
+                        parent_node_id = check_node_get_original_id(parsed_arguments[0])
+                        child_node_id = check_node_get_original_id(parsed_arguments[1])
+                        if parent_node_id and (parent_node_id not in node_levels["not_connected"]):
+                            if child_node_id and (child_node_id in node_levels["not_connected"]):
+                                new_edge = connect_nodes(parent_node_id, child_node_id)
+                                last_edge_created = new_edge
+                                max_depth, node_levels = populate_levels(selected_root_node)
+                                update_tree_file()
+                                print(f"{TerminalColors.OKGREEN}Connected nodes: {parsed_arguments[0]}-"
+                                      f"{parsed_arguments[1]}{TerminalColors.ENDC}\n")
+                            else:
+                                print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[1]} does not exist, or "
+                                      f"is already connected!{TerminalColors.ENDC}\n")
+                        else:
+                            print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[0]} does not exist, or is not "
+                                  f"yet connected!{TerminalColors.ENDC}\n")
+
             except:
                 print(
                     f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
-                    f"{TerminalColors.ENDC}")
+                    f"{TerminalColors.ENDC}\n")
 
         # EXPORT commands
         elif commandList[0] == 'export':
@@ -645,30 +686,22 @@ if __name__ == "__main__":
                         if args.json.lower().endswith('.json'):
                             exported_file = export(args.json)
                             print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
-                                  f"{TerminalColors.ENDC}")
-                            print('')
+                                  f"{TerminalColors.ENDC}\n")
                         else:
                             print(
                                 f"{TerminalColors.FAIL}Warning: The filename must be of the type filename.json!"
-                                f"{TerminalColors.ENDC}")
+                                f"{TerminalColors.ENDC}\n")
                     else:
                         exported_file = export(None)
                         print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
-                              f"{TerminalColors.ENDC}")
-                        print('')
+                              f"{TerminalColors.ENDC}\n")
 
             except:
                 print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
-                      f"{TerminalColors.ENDC}")
+                      f"{TerminalColors.ENDC}\n")
 
         else:
-            print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}")
-            print('')
-
-        # elif commandList[0] == 'createNode':
-        #     # args = parser.parse_args(commandList)
-        #     # print(args)
-        #     break
+            print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}\n")
 
         # elif commandList[0] == 'load':
         #     if os.path.isfile(commandList[1]):
@@ -700,8 +733,6 @@ if __name__ == "__main__":
 
 # - stampa un intervallo di linee
 
-# - check 'parentPieceId' order
-
 # carattere spazio - modificarlo nella grammatica
 
 # vedere con federico lunghezza linea (nodo spezzato?)
@@ -711,11 +742,15 @@ if __name__ == "__main__":
 # 2 connect nodeID1 nodeID2
 # -> se fattibile decidere quale parentPieceId
 
+# - update value of a node
+# node n0 label:"newLabel"  o  node n0 -l "newLabel"
+
+# - check 'parentPieceId' order
+
 # - indicare parentPieceId
 # {2:1;6;null;"# + #";noType;noValue} 2:1 per indicare parentPieceId?
 
-# - update value of a node
-# node n0 label:"newLabel"  o  node n0 -l "newLabel"
+# - in connect node specificare parent piece order
 
 # TODO delete_connection nodeID-nodeID, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
 #  fare nodi not connected

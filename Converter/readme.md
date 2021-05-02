@@ -22,7 +22,7 @@ type: treeDiagram, nodes: 10, maxDepth: 2, nodeStructure: {parentID; nodeID; chi
 Each time you run the script, a .tree file is generated that stores the last state of the modified diagram.
 
 ## List of the working commands:
-The following commands are correctly implemented and are working inside the script, when the field "Insert command:" appears;
+The following commands are correctly implemented and are working inside the script, when the field "Insert command: " appears:
 ```
 clear or c
 quit or q
@@ -37,6 +37,7 @@ print --notConnected or -nc
 node --expand or -ex [nodeID or "all"]
 node --scaleDown or -sd [nodeID or "all"]
 node --create --l [label] --t [type]
+node --connnect [parentNodeID]-[childNodeID]
 export
 export --json [filename.json]
 ```
