@@ -57,6 +57,7 @@ node_parser.add_argument("--create", help="Creates a node.", action="store_true"
 node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
 node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
 node_parser.add_argument("--connect", help="Creates an edge between two nodes.")
+node_parser.add_argument("--root", help="Sets a new root node in the diagram.")
 
 # TODO to implement:
 node_parser.add_argument("--modify", help="Modifies a node.")
@@ -88,11 +89,6 @@ def get_date_time():
 
 # given a file loads all the information from the file necessary to run the program.
 def load_file(filename=None):
-    edge_dictionary = {}
-    node_dictionary = {}
-    node_levels = {}
-    last_node_created = '00'  # 00 indicates no nodes
-    last_edge_created = '00'  # 00 indicates no edges
     file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
     tree_boolean = False
     file_max_depth = 0
@@ -213,7 +209,6 @@ def dev_print_infos():
 
 # TODO descrizione
 def populate_levels(root_node):
-    node_levels = {}
     max_found_depth = 0
 
     if root_node:
@@ -261,6 +256,7 @@ def populate_levels(root_node):
             for node in node_dictionary:
                 node_dictionary[node].update({'new_id': new_id_counter, 'value': 'Not connected'})
                 node_levels["not_connected"].append(node)
+                new_id_counter += 1
             delete_connection("all")
 
     return max_found_depth, node_levels
@@ -326,6 +322,17 @@ def print_separator(number_of_separators=10, separator="#"):
     print(separator * number_of_separators)
 
 
+# changes the root node, all the other nodes are changed to not connected and all the edges are deleted.
+def set_root(new_root):
+    node_dictionary[new_root].update({'new_id': 'root', 'value': ''})
+    new_id_counter = 0
+    for node in node_dictionary:
+        if node != new_root:
+            node_dictionary[node].update({'new_id': new_id_counter, 'value': 'Not connected'})
+            new_id_counter += 1
+    delete_connection("all")
+
+
 # creates a new node, standard value not connected, label and node type can be specified
 def create_node(label, node_type):
     if last_node_created == '00':
@@ -359,7 +366,8 @@ def connect_nodes(parent_node, child_node):
 def delete_connection(connection):
     if connection == "all":
         edge_dictionary.clear()
-        # TODO set last_edge_created = '00'
+        global last_edge_created
+        last_edge_created = '00'
 
 
 # change expanded value to true
@@ -509,6 +517,8 @@ if __name__ == "__main__":
     node_levels = {}
     node_dictionary = {}
     edge_dictionary = {}
+    last_node_created = '00'  # 00 indicates no nodes
+    last_edge_created = '00'  # 00 indicates no edges
     max_depth = 0
 
     try:
@@ -554,7 +564,8 @@ if __name__ == "__main__":
                   f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
                   f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
                   f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --create --l [label] --t [type] '
-                  f'\nnode --connnect [parentNodeID]-[childNodeID] \nexport \nexport --json[filename.json]')
+                  f'\nnode --connnect [parentNodeID]-[childNodeID] \nnode --root [nodeID] \nexport '
+                  f'\nexport --json[filename.json]')
             print('')
 
         # PRINT commands
@@ -669,6 +680,15 @@ if __name__ == "__main__":
                         else:
                             print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[0]} does not exist, or is not "
                                   f"yet connected!{TerminalColors.ENDC}\n")
+
+                # changes the root node, all the other nodes are changed to not connected and all the edges are deleted.
+                elif args.root:
+                    new_root_node_id = check_node_get_original_id(args.root)
+                    selected_root_node = new_root_node_id
+                    set_root(selected_root_node)
+                    max_depth, node_levels = populate_levels(selected_root_node)
+                    update_tree_file()
+                    print(f"{TerminalColors.OKGREEN}Changed root node to: {args.root}{TerminalColors.ENDC}\n")
 
             except:
                 print(
