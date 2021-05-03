@@ -849,9 +849,7 @@ if __name__ == "__main__":
 
 # vedere con federico lunghezza linea (nodo spezzato?)
 
-# - gestire node creation
-# 1 create -l label -v value -t type
-# 2 connect nodeID1 nodeID2
+# quando connect nodeID1 nodeID2
 # -> se fattibile decidere quale parentPieceId
 
 # - check 'parentPieceId' order
