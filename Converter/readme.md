@@ -43,4 +43,5 @@ node --root [nodeID]
 export
 export --json [filename.json]
 export --txt [exportfile.txt]
+load [filename.tree / filename.json / ""]
 ```

@@ -89,85 +89,98 @@ def get_date_time():
 
 # given a file loads all the information from the file necessary to run the program.
 def load_file(filename=None):
+    edge_dictionary.clear()
+    node_dictionary.clear()
     file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
     tree_boolean = False
     file_max_depth = 0
 
-    if len(sys.argv) == 2:
-        if sys.argv[1].lower().endswith('.json'):
-            filename = sys.argv[1]
-            new_filename = create_new_file(sys.argv[1])
+    if filename:
+        if filename.lower().endswith('.json'):
+            # if file exists
+            if os.path.isfile(filename):
+                new_filename = create_new_file(filename)
+                # read the json file and copies the content to local variables, creating a dictionary for the nodes and one
+                # for the edges
+                with open(filename, 'r') as f:
+                    input_data = json.loads(f.read())
 
-            # read the json file and copies the content to local variables, creating a dictionary for the nodes and one
-            # for the edges
-            with open(filename, 'r') as f:
-                input_data = json.loads(f.read())
+                # check if the root node exists
+                file_selected_root_node = None
+                for node in (input_data['nodes']):
+                    if input_data['selectedRootNode'] == node:
+                        file_selected_root_node = input_data['selectedRootNode']
 
-            # check if the root node exists
-            file_selected_root_node = None
-            for node in (input_data['nodes']):
-                if input_data['selectedRootNode'] == node:
-                    file_selected_root_node = input_data['selectedRootNode']
+                file_node_connector = input_data['nodeConnector']
 
-            file_node_connector = input_data['nodeConnector']
+                for edge in (input_data['edges']):
+                    edge_dictionary[edge] = {'parentNodeId': input_data['edges'][edge]['parentNodeId'],
+                                             'childNodeId': input_data['edges'][edge]['childNodeId'],
+                                             'parentPieceId': input_data['edges'][edge]['parentPieceId']}
+                    last_edge_created = edge
 
-            for edge in (input_data['edges']):
-                edge_dictionary[edge] = {'parentNodeId': input_data['edges'][edge]['parentNodeId'],
-                                         'childNodeId': input_data['edges'][edge]['childNodeId'],
-                                         'parentPieceId': input_data['edges'][edge]['parentPieceId']}
-                last_edge_created = edge
+                for node in (input_data['nodes']):
+                    node_dictionary[node] = {'new_id': None,
+                                             'expanded': False,
+                                             'pieces': input_data['nodes'][node]['pieces'],
+                                             'type': input_data['nodes'][node]['type'],
+                                             'value': input_data['nodes'][node]['value']}
+                    last_node_created = node
+                f.close()
 
-            for node in (input_data['nodes']):
-                node_dictionary[node] = {'new_id': None,
-                                         'expanded': False,
-                                         'pieces': input_data['nodes'][node]['pieces'],
-                                         'type': input_data['nodes'][node]['type'],
-                                         'value': input_data['nodes'][node]['value']}
-                last_node_created = node
-            f.close()
+            # raise an error if file does not exist
+            else:
+                raise ValueError
 
         # if file is .tree parse it for recover last state (with a json parser)
-        elif sys.argv[1].lower().endswith('.tree'):
-            new_filename = sys.argv[1]
+        elif filename.lower().endswith('.tree'):
+            new_filename = filename
             tree_boolean = True
 
-            # read the input of the .tree file (structured like a json file)
-            with open(new_filename, 'r') as f:
-                input_data = json.loads(f.read())
+            # if file exists
+            if os.path.isfile(filename):
+                # read the input of the .tree file (structured like a json file)
+                with open(new_filename, 'r') as f:
+                    input_data = json.loads(f.read())
 
-            # read variables
-            file_node_connector = input_data['variables']['nodeConnector']
-            filename = input_data['variables']['originalFileName']
-            last_node_created = input_data['variables']['LastCreatedNodeID']
-            last_edge_created = input_data['variables']['LastCreatedEdgeID']
-            file_node_structure = input_data['variables']['nodeStructure']
-            file_max_depth = input_data['variables']['maxDepth']
+                # read variables
+                file_node_connector = input_data['variables']['nodeConnector']
+                filename = input_data['variables']['originalFileName']
+                last_node_created = input_data['variables']['LastCreatedNodeID']
+                last_edge_created = input_data['variables']['LastCreatedEdgeID']
+                file_node_structure = input_data['variables']['nodeStructure']
+                file_max_depth = input_data['variables']['maxDepth']
 
-            # check if the root node exists and register value
-            file_selected_root_node = None
-            for node in (input_data['nodes']):
-                if input_data['variables']['selectedRootNode'] == node:
-                    file_selected_root_node = input_data['variables']['selectedRootNode']
+                # check if the root node exists and register value
+                file_selected_root_node = None
+                for node in (input_data['nodes']):
+                    if input_data['variables']['selectedRootNode'] == node:
+                        file_selected_root_node = input_data['variables']['selectedRootNode']
 
-            # read edges
-            for edge in input_data['edges']:
-                edge_dictionary[edge] = {'parentNodeId': input_data['edges'][edge]['parentNodeId'],
-                                         'childNodeId': input_data['edges'][edge]['childNodeId'],
-                                         'parentPieceId': input_data['edges'][edge]['parentPieceId']}
+                # read edges
+                for edge in input_data['edges']:
+                    edge_dictionary[edge] = {'parentNodeId': input_data['edges'][edge]['parentNodeId'],
+                                             'childNodeId': input_data['edges'][edge]['childNodeId'],
+                                             'parentPieceId': input_data['edges'][edge]['parentPieceId']}
 
-            # read nodes
-            for node in input_data['nodes']:
-                node_dictionary[node] = {'new_id': input_data['nodes'][node]['new_id'],
-                                         'expanded': input_data['nodes'][node]['expanded'],
-                                         'pieces': input_data['nodes'][node]['pieces'],
-                                         'type': input_data['nodes'][node]['type'],
-                                         'value': input_data['nodes'][node]['value']}
+                # read nodes
+                for node in input_data['nodes']:
+                    node_dictionary[node] = {'new_id': input_data['nodes'][node]['new_id'],
+                                             'expanded': input_data['nodes'][node]['expanded'],
+                                             'pieces': input_data['nodes'][node]['pieces'],
+                                             'type': input_data['nodes'][node]['type'],
+                                             'value': input_data['nodes'][node]['value']}
 
-            # read tree structure
-            for level in input_data['treeStructure']:
-                node_levels[level] = input_data['treeStructure'][level]
+                # read tree structure
+                node_levels.clear()
+                for level in input_data['treeStructure']:
+                    node_levels[level] = input_data['treeStructure'][level]
 
-            f.close()
+                f.close()
+
+            # raise an error if file does not exist
+            else:
+                raise ValueError
 
         # raise an error if file is not json file
         else:
@@ -176,9 +189,7 @@ def load_file(filename=None):
     # if load_file called without argument (initialization of a blank tree diagram)
     else:
         new_filename = create_new_file()
-        filename = None
 
-        # TODO LAST NODE CREATED
         last_node_created = '00'  # 00 indicates no nodes
         last_edge_created = '00'  # 00 indicates no edges
 
@@ -540,37 +551,46 @@ def check_node_get_original_id(node_id_to_test):
 
 if __name__ == "__main__":
 
-    node_levels = {}
-    node_dictionary = {}
-    edge_dictionary = {}
-    last_node_created = '00'  # 00 indicates no nodes
-    last_edge_created = '00'  # 00 indicates no edges
-    max_depth = 0
+    if 0 < len(sys.argv) < 3:
+        file_to_read = None
+        if len(sys.argv) == 2:
+            file_to_read = sys.argv[1]
 
-    try:
-        read_file, edge_dictionary, node_dictionary = load_file()
-        selected_root_node = read_file.root_node
-        node_connector = read_file.node_connector
-        node_structure = read_file.node_structure
-        last_node_created = read_file.last_node
-        last_edge_created = read_file.last_edge
-        if read_file.treeFileBoolean:
-            max_depth = read_file.max_depth
-            node_levels = read_file.tree_structure
-        else:
-            max_depth, node_levels = populate_levels(selected_root_node)
-            update_tree_file()
+        node_levels = {}
+        node_dictionary = {}
+        edge_dictionary = {}
+        last_node_created = '00'  # 00 indicates no nodes
+        last_edge_created = '00'  # 00 indicates no edges
+        max_depth = 0
 
-        print(f"loaded file: {read_file.filename}")
-        print(f"created file: {read_file.new_filename}")
+        try:
+            read_file, edge_dictionary, node_dictionary = load_file(file_to_read)
+            selected_root_node = read_file.root_node
+            node_connector = read_file.node_connector
+            node_structure = read_file.node_structure
+            last_node_created = read_file.last_node
+            last_edge_created = read_file.last_edge
+            if read_file.treeFileBoolean:
+                max_depth = read_file.max_depth
+                node_levels = read_file.tree_structure
+            else:
+                max_depth, node_levels = populate_levels(selected_root_node)
+                update_tree_file()
 
-    except ValueError:
-        print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files!{TerminalColors.ENDC}")
+            print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}")
+            # dev_print_infos()
+            print(print_description())
+            print(print_separator())
+            print(print_levels())
 
-    # dev_print_infos()
-    print(print_description())
-    print(print_separator())
-    print(print_levels())
+        except ValueError:
+            print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files or file does not exist!"
+                  f"{TerminalColors.ENDC}")
+    else:
+        print(f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' or "
+              f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
+
+
 
     while True:
         command = get_string("Insert command: ")
@@ -592,7 +612,8 @@ if __name__ == "__main__":
                   f'\nnode --create --label or -l[label] --type or -t[type] '
                   f'\nnode --connnect [parentNodeID]-[childNodeID] '
                   f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] '
-                  f'\nexport \nexport --json[filename.json] \nexport --txt [exportfile.txt] \n')
+                  f'\nexport \nexport --json[filename.json] \nexport --txt [exportfile.txt] '
+                  f'\nload [filename.tree / filename.json / ""] \n')
 
         # PRINT commands
         elif commandList[0] == 'print':
@@ -771,23 +792,48 @@ if __name__ == "__main__":
                 print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
                       f"{TerminalColors.ENDC}\n")
 
+        # LOAD command
+        # loads a new file of type json/tree/empty (creation of a new tree)
+        elif commandList[0] == 'load':
+
+            if 0 < len(commandList) < 3:
+                file_to_read = None
+                if len(commandList) == 2:
+                    file_to_read = commandList[1]
+
+                last_node_created = '00'  # 00 indicates no nodes
+                last_edge_created = '00'  # 00 indicates no edges
+                max_depth = 0
+
+                try:
+                    read_file, edge_dictionary, node_dictionary = load_file(file_to_read)
+                    selected_root_node = read_file.root_node
+                    node_connector = read_file.node_connector
+                    node_structure = read_file.node_structure
+                    last_node_created = read_file.last_node
+                    last_edge_created = read_file.last_edge
+                    if read_file.treeFileBoolean:
+                        max_depth = read_file.max_depth
+                        node_levels = read_file.tree_structure
+                    else:
+                        max_depth, node_levels = populate_levels(selected_root_node)
+                        update_tree_file()
+
+                    print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}")
+                    print(print_description())
+                    print(print_separator())
+                    print(print_levels())
+
+                except ValueError:
+                    print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files or file does not exist!"
+                          f"{TerminalColors.ENDC}")
+            else:
+                print(
+                    f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' or "
+                    f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
+
         else:
             print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}\n")
-
-        # elif commandList[0] == 'load':
-        #     if os.path.isfile(commandList[1]):
-        #         read_file = load_file(commandList[1])
-        #         data_in = read_file.data_input
-        #         selected_root_node = read_file.root_node
-        #         node_connector = read_file.node_connector
-        #         node_structure = read_file.node_structure
-        #         node_dictionary = {selected_root_node: {'new_id': 'root', 'expanded': False}}
-        #         node_levels = {}
-        #         max_depth = populate_levels(selected_root_node)
-        #         print(f"loaded file: {read_file.filename}\n")
-        #         print('')
-        #     else:
-        #         print(f"{TerminalColors.FAIL}File {commandList[1]} not accessible.{TerminalColors.ENDC}")
 
 # TODO s:
 # - printare le info dei nodi in base alla node Structure scelta
