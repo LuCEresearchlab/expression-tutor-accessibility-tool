@@ -58,7 +58,7 @@ node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
 node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
 node_parser.add_argument("--connect", help="Creates an edge between two nodes.")
 node_parser.add_argument("--root", help="Sets a new root node in the diagram.")
-node_parser.add_argument("--modify", help="Modifies a node.")
+node_parser.add_argument("--modify", "-m", help="Modifies a node.")
 
 # TODO to implement:
 node_parser.add_argument("--delete", help="Deletes a node.")
@@ -66,7 +66,6 @@ node_parser.add_argument("--disconnect", help="Deletes an edge between two nodes
 
 # export parser commands
 export_parser.add_argument("--json", help="Exports the modified tree to .json format.")
-# TODO to implement:
 export_parser.add_argument("--txt", help="Exports the modified tree to .txt format.")
 
 
@@ -178,6 +177,10 @@ def load_file(filename=None):
     else:
         new_filename = create_new_file()
         filename = None
+
+        # TODO LAST NODE CREATED
+        last_node_created = '00'  # 00 indicates no nodes
+        last_edge_created = '00'  # 00 indicates no edges
 
         file_selected_root_node = None
         file_node_connector = "#"
@@ -293,6 +296,15 @@ def export(export_filename):
     return export_filename
 
 
+# exports a txt file with the actual state of the diagram that we normally see in the terminal
+def export_txt(export_txt_filename):
+    with open(export_txt_filename, 'w') as txt_file:
+        txt_file.write(f"{print_description()}\n")
+        txt_file.write(f"{print_separator()}\n")
+        txt_file.write(print_levels())
+    txt_file.close()
+
+
 # called always after a change in the diagram, copies the actual state of the tree diagram in the .tree file.
 def update_tree_file():
     tree_variables = {'originalFileName': read_file.filename,
@@ -315,15 +327,15 @@ def update_tree_file():
     return
 
 
-# prints the description of the tree diagram
+# returns the description of the tree diagram as a string (for printing)
 def print_description():
-    print(f'type: treeDiagram, nodes: {len(node_dictionary)}, maxDepth: {max_depth}, nodeStructure: {node_structure}, '
-          f'connector: "{node_connector}"')
+    return (f'type: treeDiagram, nodes: {len(node_dictionary)}, maxDepth: {max_depth}, '
+            f'nodeStructure: {node_structure}, connector: "{node_connector}"')
 
 
-# prints the separator between the description and the tree diagram
+# returns the separator between the description and the tree diagram as a string (for printing)
 def print_separator(number_of_separators=10, separator="#"):
-    print(separator * number_of_separators)
+    return "" + separator * number_of_separators
 
 
 # changes the root node, all the other nodes are changed to not connected and all the edges are deleted.
@@ -479,19 +491,21 @@ def print_level(level):
 
 # prints the level indicator and the nodes present in a level
 def print_levels(selected_level=False):
+    string_to_return = ''
     if selected_level:
         if selected_level in ["root", "not_connected"]:
-            print(f"@{selected_level} {print_level(selected_level)}")
+            string_to_return = f"@{selected_level} {print_level(selected_level)}"
         else:
-            print(f"@{int(selected_level)} {print_level(int(selected_level))}")
+            string_to_return = f"@{int(selected_level)} {print_level(int(selected_level))}"
     else:
         for level in node_levels:
             if level != "not_connected":
-                print(f"@{level} {print_level(level)}")
+                string_to_return += f"@{level} {print_level(level)}\n"
 
         if "not_connected" in node_levels:
             level = "not_connected"
-            print(f"@{level} {print_level(level)}")
+            string_to_return += f"@{level} {print_level(level)}\n"
+    return string_to_return
 
 
 # clears the terminal
@@ -554,10 +568,9 @@ if __name__ == "__main__":
         print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files!{TerminalColors.ENDC}")
 
     # dev_print_infos()
-    print_description()
-    print_separator()
-    print_levels()
-    print('')
+    print(print_description())
+    print(print_separator())
+    print(print_levels())
 
     while True:
         command = get_string("Insert command: ")
@@ -575,10 +588,11 @@ if __name__ == "__main__":
             print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all '
                   f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
                   f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
-                  f'\nnode --scaleDown or -sd[nodeID or "all"] \nnode --connnect [parentNodeID]-[childNodeID] '
-                  f'\nnode --modify [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] \nexport '
-                  f'\nexport --json[filename.json]')
-            print('')
+                  f'\nnode --scaleDown or -sd[nodeID or "all"] '
+                  f'\nnode --create --label or -l[label] --type or -t[type] '
+                  f'\nnode --connnect [parentNodeID]-[childNodeID] '
+                  f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] '
+                  f'\nexport \nexport --json[filename.json] \nexport --txt [exportfile.txt] \n')
 
         # PRINT commands
         elif commandList[0] == 'print':
@@ -586,18 +600,15 @@ if __name__ == "__main__":
                 args = parser.parse_args(commandList)
 
                 if len(commandList) == 1 or args.all:
-                    print_description()
-                    print_separator()
-                    print_levels()
-                    print('')
+                    print(print_description())
+                    print(print_separator())
+                    print(print_levels())
 
                 elif args.tree:
-                    print_levels()
-                    print('')
+                    print(print_levels())
 
                 elif args.description:
-                    print_description()
-                    print('')
+                    print(print_description() + '\n')
 
                 elif args.node:
                     old_id = check_node_get_original_id(args.node)
@@ -608,15 +619,13 @@ if __name__ == "__main__":
 
                 elif args.level:
                     if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
-                        print_levels(args.level)
-                        print('')
+                        print(f"{print_levels(args.level)}\n")
                     else:
                         print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}"
                               f"\n")
 
                 elif args.notConnected:
-                    print_levels("not_connected")
-                    print('')
+                    print(f"{print_levels('not_connected')}\n")
 
             except:
                 print(
@@ -634,8 +643,7 @@ if __name__ == "__main__":
                             expand_all()
                         else:
                             scale_down_all()
-                        print_levels()
-                        print('')
+                        print(f"{print_levels()}\n")
                         update_tree_file()
                     else:
                         if args.expand:
@@ -749,6 +757,16 @@ if __name__ == "__main__":
                         print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
                               f"{TerminalColors.ENDC}\n")
 
+                elif args.txt:
+                    if args.txt.lower().endswith('.txt'):
+                        export_txt(args.txt)
+                        print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {args.txt}"
+                              f"{TerminalColors.ENDC}\n")
+                    else:
+                        print(f"{TerminalColors.FAIL}Warning: The filename must be of the type filename.txt!"
+                              f"{TerminalColors.ENDC}\n")
+
+
             except:
                 print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
                       f"{TerminalColors.ENDC}\n")
@@ -767,22 +785,17 @@ if __name__ == "__main__":
         #         node_levels = {}
         #         max_depth = populate_levels(selected_root_node)
         #         print(f"loaded file: {read_file.filename}\n")
-        #         print_description()
-        #         print_separator()
-        #         print_levels()
         #         print('')
         #     else:
         #         print(f"{TerminalColors.FAIL}File {commandList[1]} not accessible.{TerminalColors.ENDC}")
 
-# TODO
+# TODO s:
 # - printare le info dei nodi in base alla node Structure scelta
 
 # - migliorare il main program che gestisce gli input dalla shell con argparse e definire bene i commandi
 # - check if input one of the recognized commands
 # - standard command: command node -> to check
 # - improve argparse error handling
-
-# - esporta diagramma in un file txt
 
 # - stampa un intervallo di linee
 

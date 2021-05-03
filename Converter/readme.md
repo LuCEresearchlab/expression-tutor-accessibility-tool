@@ -38,8 +38,9 @@ node --expand or -ex [nodeID or "all"]
 node --scaleDown or -sd [nodeID or "all"]
 node --create --label or -l [label] --type or -t [type]
 node --connnect [parentNodeID]-[childNodeID]
-node --modify [nodeID] --label or -l [label] --type or -t [type]
+node --modify or -m [nodeID] --label or -l [label] --type or -t [type]
 node --root [nodeID]
 export
 export --json [filename.json]
+export --txt [exportfile.txt]
 ```
