@@ -59,6 +59,7 @@ node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
 node_parser.add_argument("--connect", help="Creates an edge between two nodes.")
 node_parser.add_argument("--root", help="Sets a new root node in the diagram.")
 node_parser.add_argument("--modify", "-m", help="Modifies a node.")
+node_parser.add_argument("--find", "-f", help="Finds a node.")
 
 # TODO to implement:
 node_parser.add_argument("--delete", help="Deletes a node.")
@@ -549,6 +550,16 @@ def check_node_get_original_id(node_id_to_test):
         return False
 
 
+# returns a list of node ID's that contain the letter, number, symbol or word that is passed to the function in
+# the label of the node.
+def find_node(argument):
+    found_nodes_list = []
+    for node_id in node_dictionary:
+        if str(get_label(node_id)).find(argument) != -1:
+            found_nodes_list.append(node_id)
+    return found_nodes_list
+
+
 if __name__ == "__main__":
 
     if 0 < len(sys.argv) < 3:
@@ -590,8 +601,6 @@ if __name__ == "__main__":
         print(f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' or "
               f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
 
-
-
     while True:
         command = get_string("Insert command: ")
         commandList = command.strip().split(" ")
@@ -612,8 +621,8 @@ if __name__ == "__main__":
                   f'\nnode --create --label or -l[label] --type or -t[type] '
                   f'\nnode --connnect [parentNodeID]-[childNodeID] '
                   f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] '
-                  f'\nexport \nexport --json[filename.json] \nexport --txt [exportfile.txt] '
-                  f'\nload [filename.tree / filename.json / ""] \n')
+                  f'\nnode --find or -f [argument] \nexport \nexport --json[filename.json] '
+                  f'\nexport --txt [exportfile.txt] \nload [filename.tree / filename.json / ""] \n')
 
         # PRINT commands
         elif commandList[0] == 'print':
@@ -701,6 +710,17 @@ if __name__ == "__main__":
                     update_tree_file()
                     print(f"{TerminalColors.OKGREEN}Created node: {print_node(new_node)}"
                           f"{TerminalColors.ENDC}\n")
+
+                # finds a node
+                elif args.find:
+                    found_nodes = find_node(args.find)
+                    if not found_nodes:
+                        print(f"{TerminalColors.FAIL}No node contains: {args.find}{TerminalColors.ENDC}\n")
+                    else:
+                        print(f"{TerminalColors.OKGREEN}Found nodes:{TerminalColors.ENDC}")
+                        for node in found_nodes:
+                            print(f"ID: {node_dictionary[node]['new_id']} - NODE: {print_node(node)}")
+                        print('')
 
                 # modifies a node with parameters label or type
                 elif args.modify:

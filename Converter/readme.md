@@ -21,8 +21,9 @@ type: treeDiagram, nodes: 10, maxDepth: 2, nodeStructure: {parentID; nodeID; chi
 ```
 Each time you run the script, a .tree file is generated that stores the last state of the modified diagram.
 
-## List of the working commands:
-The following commands are correctly implemented and are working inside the script, when the field "Insert command: " appears:
+## List of the commands:
+You can use the following commands to explore, modify or analyze the tree diagram. You can input them when the field 
+"Insert command: " appears:
 ```
 clear or c
 quit or q
@@ -40,6 +41,7 @@ node --create --label or -l [label] --type or -t [type]
 node --connnect [parentNodeID]-[childNodeID]
 node --modify or -m [nodeID] --label or -l [label] --type or -t [type]
 node --root [nodeID]
+node --find or -f [argument]
 export
 export --json [filename.json]
 export --txt [exportfile.txt]
