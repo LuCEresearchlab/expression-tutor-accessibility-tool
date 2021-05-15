@@ -43,28 +43,28 @@ node_parser = subparsers.add_parser("node")
 export_parser = subparsers.add_parser("export")
 
 # print parser commands
-print_parser.add_argument("--all", help="Prints the description and the tree diagram.", action="store_true")
-print_parser.add_argument("--tree", help="Prints the tree diagram.", action="store_true")
-print_parser.add_argument("--level", help="Prints the node.")
-print_parser.add_argument("--node", help="Prints the node.")
-print_parser.add_argument("--description", help="Prints the description.", action="store_true")
+print_parser.add_argument("--all", "-a", help="Prints the description and the tree diagram.", action="store_true")
+print_parser.add_argument("--tree", "-tr", help="Prints the tree diagram.", action="store_true")
+print_parser.add_argument("--level", "-lev", help="Prints the node.")
+print_parser.add_argument("--node", "-n", help="Prints the node.")
+print_parser.add_argument("--description", "-des", help="Prints the description.", action="store_true")
 print_parser.add_argument("--notConnected", "-nc", help="Prints the not connected nodes.", action="store_true")
 
 # node parser commands
 node_parser.add_argument("--expand", "-ex", help="Expands the node.")
 node_parser.add_argument("--scaleDown", "-sd", help="Scales down the node.")
-node_parser.add_argument("--create", help="Creates a node.", action="store_true")
+node_parser.add_argument("--create", "-c", help="Creates a node.", action="store_true")
 node_parser.add_argument("--label", "-l", help="Specifies label of a node.")
 node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
-node_parser.add_argument("--connect", help="Creates an edge between two nodes.")
-node_parser.add_argument("--root", help="Sets a new root node in the diagram.")
+node_parser.add_argument("--connect", "-con", help="Creates an edge between two nodes.")
+node_parser.add_argument("--root", "-r", help="Sets a new root node in the diagram.")
 node_parser.add_argument("--modify", "-m", help="Modifies a node.")
 node_parser.add_argument("--find", "-f", help="Finds a node.")
 node_parser.add_argument("--disconnect", "-dis", help="Deletes an edge between two nodes.")
 node_parser.add_argument("--delete", "-del", help="Deletes a node.")
 
 # export parser commands
-export_parser.add_argument("--json", help="Exports the modified tree to .json format.")
+export_parser.add_argument("--json", "-j", help="Exports the modified tree to .json format.")
 export_parser.add_argument("--txt", help="Exports the modified tree to .txt format.")
 
 
@@ -672,16 +672,17 @@ if __name__ == "__main__":
 
         # returns the list of existing commands
         elif commandList[0] in ['help', 'h']:
-            print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all '
-                  f'\nprint --tree \nprint --level[levelNumber] \nprint --node[nodeID] \nprint --description '
-                  f'\nprint --notConnected or -nc \nnode --expand or -ex[nodeID or "all"] '
-                  f'\nnode --scaleDown or -sd[nodeID or "all"] '
-                  f'\nnode --create --label or -l[label] --type or -t[type] '
-                  f'\nnode --connnect [parentNodeID]-[childNodeID] '
+            print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all or -a '
+                  f'\nprint --tree or -tr \nprint --level or -lev [levelNumber] \nprint --node or -n [nodeID] '
+                  f'\nprint --description or -des \nprint --notConnected or -nc '
+                  f'\nnode --expand or -ex [nodeID or "all"] \nnode --scaleDown or -sd [nodeID or "all"] '
+                  f'\nnode --create or -c --label or -l [label] --type or -t [type] '
+                  f'\nnode --connect or -con [parentNodeID]-[childNodeID] '
                   f'\nnode --disconnect or -dis [parentNodeID]-[childNodeID] \nnode --delete or -del [nodeID]'
-                  f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] '
-                  f'\nnode --find or -f [argument] \nexport \nexport --json[filename.json] '
-                  f'\nexport --txt [exportfile.txt] \nload [filename.tree / filename.json / ""] \n')
+                  f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] '
+                  f'\nnode --root or -r [nodeID] \nnode --find or -f [argument] \nexport '
+                  f'\nexport --json or -j [filename.json] \nexport --txt [exportfile.txt] '
+                  f'\nload [filename.tree / filename.json / ""] \n')
 
         # PRINT commands
         elif commandList[0] == 'print':
@@ -955,14 +956,7 @@ if __name__ == "__main__":
             print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}\n")
 
 # TODO s:
-# - printare le info dei nodi in base alla node Structure scelta
-
-# - migliorare il main program che gestisce gli input dalla shell con argparse e definire bene i commandi
-# - check if input one of the recognized commands
-# - standard command: command node -> to check
-# - improve argparse error handling
-
-# - stampa un intervallo di linee
+# printare le info dei nodi in base alla node Structure scelta
 
 # carattere spazio - modificarlo nella grammatica
 
@@ -980,4 +974,4 @@ if __name__ == "__main__":
 
 # TODO NODE DISCONNECT con un attributo (scollega tutti i nodi sotto un nodo): node --disconnect [nodeID1]
 
-# TODO aggiungere shortcut ai comandi e aggiornare help, readme, latex (x2)
+# TODO stampa un intervallo di linee
