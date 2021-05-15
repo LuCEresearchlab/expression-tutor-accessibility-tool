@@ -39,7 +39,8 @@ node --expand or -ex [nodeID or "all"]
 node --scaleDown or -sd [nodeID or "all"]
 node --create --label or -l [label] --type or -t [type]
 node --connnect [parentNodeID]-[childNodeID]
-node --disconnect [parentNodeID]-[childNodeID]
+node --disconnect or -dis [parentNodeID]-[childNodeID]
+node --delete or -del [nodeID]
 node --modify or -m [nodeID] --label or -l [label] --type or -t [type]
 node --root [nodeID]
 node --find or -f [argument]
@@ -107,9 +108,14 @@ node --connnect [parentNodeID]-[childNodeID]
 The command node with the attribute --connect, creates a new edge in the diagram between the node parentNodeID that is already in the diagram and the node childNodeID that is not yet connected.
 
 ```
-node --disconnect [parentNodeID]-[childNodeID]
+node --disconnect or -dis [parentNodeID]-[childNodeID]
 ````
 The command node with the attribute --disconnect, disconnects the two nodes parentNodeID and childNodeID that are connected in the diagram and removes also the connections of all the sub-nodes.
+
+```
+node --delete or -del [nodeID]
+```
+The command node with the attribute --delete (shortcut -del), deletes the node nodeID and if necessary disconnects the sub-nodes affected from this change.
 
 ```
 node --modify or -m [nodeID] --label or -l [label] --type or -t [type]
@@ -148,5 +154,5 @@ The command export with the attribute --txt, exports a txt file with the actual 
 
 ```
 load [filename.tree / filename.json / ""]
-````
+```
 The command load loads an existing file of type .json (from the expression tutor) or .tree (last state of a tree diagram) into the program. If the command load is called without a filename, it creates a new empty tree diagram.

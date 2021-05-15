@@ -61,8 +61,6 @@ node_parser.add_argument("--root", help="Sets a new root node in the diagram.")
 node_parser.add_argument("--modify", "-m", help="Modifies a node.")
 node_parser.add_argument("--find", "-f", help="Finds a node.")
 node_parser.add_argument("--disconnect", "-dis", help="Deletes an edge between two nodes.")
-
-# TODO to implement:
 node_parser.add_argument("--delete", "-del", help="Deletes a node.")
 
 # export parser commands
@@ -422,48 +420,69 @@ def check_edge(parent_node, child_node):
 
 
 # deletes all the connections in the tree diagram
-def delete_connection_all(connection):
+def delete_connection_all():
     edge_dictionary.clear()
     global last_edge_created
     last_edge_created = '00'
 
 
+# deletes a node and if necessary disconnects the nodes affected from this change
+def delete_node(node_id_to_delete):
+    parent_node_id = get_parent_node(node_id_to_delete)
+
+    # case the node is not connected
+    if node_dictionary[node_id_to_delete]['value'] == 'Not connected':
+        del node_dictionary[node_id_to_delete]
+
+    # case the node has a parent
+    elif parent_node_id:
+        disconnect_nodes(check_edge(check_node_get_original_id(str(parent_node_id)), node_id_to_delete))
+        del node_dictionary[node_id_to_delete]
+
+    # case the node is the root and has no parent
+    else:
+        delete_connection_all()
+        global selected_root_node
+        selected_root_node = None
+        del node_dictionary[node_id_to_delete]
+
+
 # change expanded value to true
-def expand_node(node_id):
-    node_dictionary[node_id].update({"expanded": True})
+def expand_node(node_id_to_expand):
+    node_dictionary[node_id_to_expand].update({"expanded": True})
 
 
 # expands all the nodes in the tree diagram
 def expand_all():
-    for node_id in node_dictionary:
-        node_dictionary[node_id].update({"expanded": True})
+    for node_id_to_expand in node_dictionary:
+        node_dictionary[node_id_to_expand].update({"expanded": True})
 
 
 # change expanded value to false
-def scale_down_node(node_id):
-    node_dictionary[node_id].update({"expanded": False})
+def scale_down_node(node_id_to_scale_down):
+    node_dictionary[node_id_to_scale_down].update({"expanded": False})
 
 
 # scales down all the nodes in the tree diagram
 def scale_down_all():
-    for node_id in node_dictionary:
-        node_dictionary[node_id].update({"expanded": False})
+    for node_id_to_scale_down in node_dictionary:
+        node_dictionary[node_id_to_scale_down].update({"expanded": False})
 
 
-def get_parent_node(node_id):
+def get_parent_node(node_id_find_parent):
     find_parent = False
     for edge in edge_dictionary:
-        if edge_dictionary[edge]['childNodeId'] == node_id:
+        if edge_dictionary[edge]['childNodeId'] == node_id_find_parent:
             return node_dictionary[edge_dictionary[edge]['parentNodeId']]['new_id']
     if not find_parent:
-        return 'null'
+        return None
 
 
-def get_children_nodes(node_id):
+def get_children_nodes(node_id_find_child):
     find_children = False
     list_of_children = []
     for edge in edge_dictionary:
-        if edge_dictionary[edge]['parentNodeId'] == node_id:
+        if edge_dictionary[edge]['parentNodeId'] == node_id_find_child:
             find_children = True
             list_of_children.append(node_dictionary[edge_dictionary[edge]['childNodeId']]['new_id'])
     if find_children:
@@ -479,58 +498,61 @@ def list_to_string(list_of_elements):
 
 
 # returns the label of a node
-def get_label(node_id):
-    if node_dictionary[node_id]['pieces'] == '':
+def get_label(node_id_find_label):
+    if node_dictionary[node_id_find_label]['pieces'] == '':
         return 'noLabel'
-    return list_to_string(node_dictionary[node_id]['pieces'])
+    return list_to_string(node_dictionary[node_id_find_label]['pieces'])
 
 
 # returns the type of a node
-def get_type(node_id):
-    if node_dictionary[node_id]['type'] == '':
+def get_type(node_id_find_type):
+    if node_dictionary[node_id_find_type]['type'] == '':
         return 'noType'
-    return node_dictionary[node_id]['type']
+    return node_dictionary[node_id_find_type]['type']
 
 
 # returns value of a node
-def get_value(node_id):
-    if node_dictionary[node_id]['value'] == '':
+def get_value(node_id_find_value):
+    if node_dictionary[node_id_find_value]['value'] == '':
         return 'noValue'
-    return node_dictionary[node_id]['value']
+    return node_dictionary[node_id_find_value]['value']
 
 
 # prints a node, expanded or not
-def print_node(node_id):
-    children = get_children_nodes(node_id)
+def print_node(node_id_print):
+    children = get_children_nodes(node_id_print)
     if not children:
         children = 'null'
-
     if len(children) == 1:
         children = children[0]
 
-    if node_dictionary[node_id]['expanded']:
+    parent = get_parent_node(node_id_print)
+    if not parent:
+        parent = 'null'
+
+    if node_dictionary[node_id_print]['expanded']:
         # return formatted expanded node
-        return ('{' + 'parentID: ' + str(get_parent_node(node_id)) + '; ' +
-                'nodeID: ' + str(node_dictionary[node_id]['new_id']) + '; ' +
+        return ('{' + 'parentID: ' + str(parent) + '; ' +
+                'nodeID: ' + str(node_dictionary[node_id_print]['new_id']) + '; ' +
                 'childrenID: ' + str(children) + '; ' +
-                'label: ' + str(get_label(node_id)) + '; ' +
-                'type: ' + str(get_type(node_id)) + '; ' +
-                'value: ' + str(get_value(node_id)) + '}')
+                'label: ' + str(get_label(node_id_print)) + '; ' +
+                'type: ' + str(get_type(node_id_print)) + '; ' +
+                'value: ' + str(get_value(node_id_print)) + '}')
     else:
         # return formatted scaled down node
-        return ('{' + str(get_parent_node(node_id)) + ';' +
-                str(node_dictionary[node_id]['new_id']) + ';' +
+        return ('{' + str(parent) + ';' +
+                str(node_dictionary[node_id_print]['new_id']) + ';' +
                 str(children) + ';' +
-                str(get_label(node_id)) + ';' +
-                str(get_type(node_id)) + ';' +
-                str(get_value(node_id)) + '}')
+                str(get_label(node_id_print)) + ';' +
+                str(get_type(node_id_print)) + ';' +
+                str(get_value(node_id_print)) + '}')
 
 
 # prints the node present in a level
 def print_level(level):
     string = ""
-    for node in node_levels[level]:
-        string += print_node(node) + " "
+    for single_node in node_levels[level]:
+        string += print_node(single_node) + " "
     return string
 
 
@@ -656,7 +678,7 @@ if __name__ == "__main__":
                   f'\nnode --scaleDown or -sd[nodeID or "all"] '
                   f'\nnode --create --label or -l[label] --type or -t[type] '
                   f'\nnode --connnect [parentNodeID]-[childNodeID] '
-                  f'\nnode --disconnect [parentNodeID]-[childNodeID] '
+                  f'\nnode --disconnect or -dis [parentNodeID]-[childNodeID] \nnode --delete or -del [nodeID]'
                   f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] \nnode --root [nodeID] '
                   f'\nnode --find or -f [argument] \nexport \nexport --json[filename.json] '
                   f'\nexport --txt [exportfile.txt] \nload [filename.tree / filename.json / ""] \n')
@@ -820,17 +842,25 @@ if __name__ == "__main__":
                                     print(f"{TerminalColors.OKGREEN}Disconnected nodes: {parsed_arguments[0]}-"
                                           f"{parsed_arguments[1]} and all the child connections!{TerminalColors.ENDC}\n")
                                 else:
-                                    print(
-                                        f"{TerminalColors.FAIL}Warning: Edge between {parent_node_id} and "
-                                        f"{child_node_id} does not exist!{TerminalColors.ENDC}\n")
+                                    print(f"{TerminalColors.FAIL}Warning: Edge between {parent_node_id} and "
+                                          f"{child_node_id} does not exist!{TerminalColors.ENDC}\n")
                             else:
-                                print(
-                                    f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[1]} does not exist, or "
-                                    f"is not connected!{TerminalColors.ENDC}\n")
+                                print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[1]} does not exist, or is "
+                                      f"not connected!{TerminalColors.ENDC}\n")
                         else:
-                            print(
-                                f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[0]} does not exist, or is not "
-                                f"connected!{TerminalColors.ENDC}\n")
+                            print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[0]} does not exist, or is not "
+                                  f"connected!{TerminalColors.ENDC}\n")
+
+                # deletes a node in thee tree diagram
+                elif args.delete:
+                    node_id = check_node_get_original_id(args.delete)
+                    if node_id:
+                        delete_node(node_id)
+                        max_depth, node_levels = populate_levels(selected_root_node)
+                        update_tree_file()
+                        print(f"{TerminalColors.OKGREEN}Deleted node: {node_id}{TerminalColors.ENDC}\n")
+                    else:
+                        print(f"{TerminalColors.FAIL}Warning: Node {node_id} does not exist!{TerminalColors.ENDC}\n")
 
                 # changes the root node, all the other nodes are changed to not connected and all the edges are deleted.
                 elif args.root:
@@ -950,5 +980,4 @@ if __name__ == "__main__":
 
 # TODO NODE DISCONNECT con un attributo (scollega tutti i nodi sotto un nodo): node --disconnect [nodeID1]
 
-# TODO delete_node nodeID, cancellare nodo, ricorsivo controllare se ha figli e cancellare anche quelle connessioni e
-#  fare nodi not connected, se cancello root, tutti i nodi non connected
+# TODO aggiungere shortcut ai comandi e aggiornare help, readme, latex (x2)
