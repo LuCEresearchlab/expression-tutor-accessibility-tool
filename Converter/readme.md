@@ -39,6 +39,7 @@ node --expand or -ex [nodeID or "all"]
 node --scaleDown or -sd [nodeID or "all"]
 node --create --label or -l [label] --type or -t [type]
 node --connnect [parentNodeID]-[childNodeID]
+node --disconnect [parentNodeID]-[childNodeID]
 node --modify or -m [nodeID] --label or -l [label] --type or -t [type]
 node --root [nodeID]
 node --find or -f [argument]
@@ -47,3 +48,105 @@ export --json [filename.json]
 export --txt [exportfile.txt]
 load [filename.tree / filename.json / ""]
 ```
+
+###Commands description
+
+```
+clear or c
+```
+The command clear (shortcut c) gives the possibility to "clean up" the terminal.
+
+```
+quit or q
+`````
+The command quit (shortcut q) is used to terminate the script.
+
+```
+help or h
+```
+The command help (shortcut h) gives the list of all the possible commands.
+
+```
+print or print --all 
+````
+The command print or print with the attribute --all, prints in the terminal the description of the tree diagram, a separation line and the tree diagram itself.
+
+```
+print --tree
+```
+The command print with the attribute --tree, prints in the terminal the tree diagram.
+
+```
+print --description
+````
+The command print with the attribute --descripion, prints in the terminal the description of the tree diagram.
+
+```
+print --level [levelNumber]
+```
+The command print with the attribute --level, prints the level levelNumber of the tree diagram in the terminal.
+
+```
+print --notConnected or -nc
+````
+The command print with the attribute --notConnected (shortcut -nc), prints the nodes that are not connected of the tree diagram in the terminal.
+
+```
+print --node [nodeID]
+```
+The command print with the attribute --node, prints the node nodeID of the tree diagram in the terminal.
+
+```
+node --create --label or -l [label] --type or -t [type]
+````
+The command node with the attribute --create, creates a new node in the diagram. With the attribute --label (shortcut -l) we can specify the label of the node and with the attribute --type (shortcut -t) we can specify the type of the node.
+
+```
+node --connnect [parentNodeID]-[childNodeID]
+```
+The command node with the attribute --connect, creates a new edge in the diagram between the node parentNodeID that is already in the diagram and the node childNodeID that is not yet connected.
+
+```
+node --disconnect [parentNodeID]-[childNodeID]
+````
+The command node with the attribute --disconnect, disconnects the two nodes parentNodeID and childNodeID that are connected in the diagram and removes also the connections of all the sub-nodes.
+
+```
+node --modify or -m [nodeID] --label or -l [label] --type or -t [type]
+```
+The command node with the attribute --modify, modifies the node nodeID in the diagram. With the attribute --label (shortcut -l) we can specify the new label of the node and with the attribute --type (shortcut -t) we can specify the new type of the node.
+
+```
+node --root [nodeID]
+````
+The command node with the attribute --root, changes the root node of the tree diagram to nodeID, all the other nodes are changed to "not connected" and all the edges are deleted.
+
+```
+node --find or -f [argument]
+```
+The command node with the attribute --find (shortcut -f), prints in the terminal the node ID's and the nodes that contains the argument (a letter, number, symbol or word) that is passed to the function.
+
+```
+node --expand or -ex [nodeID or "all"]
+````
+The command node with the attribute --expand (shortcut -ex), makes the labels of the different values of the node nodeID visible. If we give as argument "all", the command is applied to all the nodes of the tree.
+
+```
+node --scaleDown or -sd [nodeID or "all"]
+```
+The command node with the attribute --scaleDown (shortcut -sd), hides the labels of the different values of the node nodeID. If we give as argument "all", the command is applied to all the nodes of the tree.
+
+```
+export or export --json [filename.json]
+````
+The command export or export with the attribute --json, exports a json file of the tree diagram that is compatible with the expression tutor. If you use only export the script generates a filename, if you use he attribute --json you can specify the filename of the new file.
+
+```
+export --txt [exportfile.txt]
+```
+The command export with the attribute --txt, exports a txt file with the actual state of the diagram formatted as we normally see it in the terminal.
+
+```
+load [filename.tree / filename.json / ""]
+````
+The command load loads an existing file of type .json (from the expression tutor) or .tree (last state of a tree diagram) into the program. If the command load is called without a filename, it creates a new empty tree diagram.
