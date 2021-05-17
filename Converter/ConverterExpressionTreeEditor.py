@@ -21,7 +21,7 @@ class TerminalColors:
 # defines the file struct that is used to parse a file and return a struct of that file.
 class File:
     def __init__(self, filename, new_filename, root_node, node_connector, node_structure, last_node, last_edge,
-                 max_depth, treeFileBoolean, tree_structure):
+                 max_depth, tree_file_boolean, tree_structure):
         self.filename = filename
         self.new_filename = new_filename
         self.root_node = root_node
@@ -30,7 +30,7 @@ class File:
         self.last_node = last_node
         self.last_edge = last_edge
         self.max_depth = max_depth
-        self.treeFileBoolean = treeFileBoolean
+        self.treeFileBoolean = tree_file_boolean
         self.tree_structure = tree_structure
 
 
@@ -99,8 +99,8 @@ def load_file(filename=None):
             # if file exists
             if os.path.isfile(filename):
                 new_filename = create_new_file(filename)
-                # read the json file and copies the content to local variables, creating a dictionary for the nodes and one
-                # for the edges
+                # read the json file and copies the content to local variables, creating a dictionary for the nodes
+                # and one for the edges
                 with open(filename, 'r') as f:
                     input_data = json.loads(f.read())
 
@@ -221,7 +221,7 @@ def dev_print_infos():
     print("-------------------------------------------------------\n")
 
 
-# TODO descrizione
+# populate levels takes the nodes and gives the new id's and creates the new tree structure
 def populate_levels(root_node):
     max_found_depth = 0
     node_levels.clear()
@@ -311,7 +311,7 @@ def export_txt(export_txt_filename):
     with open(export_txt_filename, 'w') as txt_file:
         txt_file.write(f"{print_description()}\n")
         txt_file.write(f"{print_separator()}\n")
-        txt_file.write(print_levels())
+        txt_file.write(print_levels(None, None))
     txt_file.close()
 
 
@@ -469,6 +469,7 @@ def scale_down_all():
         node_dictionary[node_id_to_scale_down].update({"expanded": False})
 
 
+# returns the parent node of a node
 def get_parent_node(node_id_find_parent):
     find_parent = False
     for edge in edge_dictionary:
@@ -478,6 +479,7 @@ def get_parent_node(node_id_find_parent):
         return None
 
 
+# returns the children nodes (if any) of a node
 def get_children_nodes(node_id_find_child):
     find_children = False
     list_of_children = []
@@ -557,13 +559,28 @@ def print_level(level):
 
 
 # prints the level indicator and the nodes present in a level
-def print_levels(selected_level=False):
+def print_levels(selected_level, to_level):
     string_to_return = ''
     if selected_level:
-        if selected_level in ["root", "not_connected"]:
-            string_to_return = f"@{selected_level} {print_level(selected_level)}"
+        # if we want to print a single line
+        if not to_level:
+            if selected_level in ["root", "not_connected"]:
+                string_to_return = f"@{selected_level} {print_level(selected_level)}"
+            else:
+                string_to_return = f"@{int(selected_level)} {print_level(int(selected_level))}"
+        # if we want to print a rang of lines
         else:
-            string_to_return = f"@{int(selected_level)} {print_level(int(selected_level))}"
+            if selected_level == "root":
+                string_to_return += f"@root {print_level('root')}\n"
+                selected_level = 0
+
+            for level in node_levels:
+                if level in ["not_connected", "root"]:
+                    continue
+
+                if (int(selected_level) <= level) and (level <= int(to_level)):
+                    string_to_return += f"@{level} {print_level(level)}\n"
+    # if we want to print all lines
     else:
         for level in node_levels:
             if level != "not_connected":
@@ -580,6 +597,7 @@ def clear():
     _ = os.system('clear')
 
 
+# checks the input given by the user
 def get_string(message):
     while True:
         string = input(message)
@@ -589,6 +607,7 @@ def get_string(message):
             print(f"{TerminalColors.FAIL}Warning: Your input was empty!{TerminalColors.ENDC}")
 
 
+# if the node exists returns the original ID of the node
 def check_node_get_original_id(node_id_to_test):
     if node_id_to_test == "root":
         for node in node_dictionary:
@@ -615,6 +634,8 @@ def find_node(argument):
     return found_nodes_list
 
 
+# ---------------------------------------------------------------------------------------------------------------------
+# main function
 if __name__ == "__main__":
 
     if 0 < len(sys.argv) < 3:
@@ -645,12 +666,14 @@ if __name__ == "__main__":
 
             print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}\n")
 
-            # TODO da togliere se non dev mode
+            # TODO da usare per developer mode
+            # --------------------------------
             # dev_print_infos()
+            # --------------------------------
 
             print(print_description())
             print(print_separator())
-            print(print_levels())
+            print(print_levels(None, None))
 
         except ValueError:
             print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files or file does not exist!"
@@ -673,8 +696,8 @@ if __name__ == "__main__":
         # returns the list of existing commands
         elif commandList[0] in ['help', 'h']:
             print(f'List of existing commands: \nclear or c \nquit or q \nhelp or h \nprint \nprint --all or -a '
-                  f'\nprint --tree or -tr \nprint --level or -lev [levelNumber] \nprint --node or -n [nodeID] '
-                  f'\nprint --description or -des \nprint --notConnected or -nc '
+                  f'\nprint --tree or -tr \nprint --level or -lev [levelNumber] or [fromLevelNumber]-[toLevelNumber] '
+                  f'\nprint --node or -n [nodeID] \nprint --description or -des \nprint --notConnected or -nc '
                   f'\nnode --expand or -ex [nodeID or "all"] \nnode --scaleDown or -sd [nodeID or "all"] '
                   f'\nnode --create or -c --label or -l [label] --type or -t [type] '
                   f'\nnode --connect or -con [parentNodeID]-[childNodeID] '
@@ -692,10 +715,10 @@ if __name__ == "__main__":
                 if len(commandList) == 1 or args.all:
                     print(print_description())
                     print(print_separator())
-                    print(print_levels())
+                    print(print_levels(None, None))
 
                 elif args.tree:
-                    print(print_levels())
+                    print(print_levels(None, None))
 
                 elif args.description:
                     print(print_description() + '\n')
@@ -708,14 +731,31 @@ if __name__ == "__main__":
                         print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}\n")
 
                 elif args.level:
-                    if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
-                        print(f"{print_levels(args.level)}\n")
+                    # print more levels
+                    if "-" in args.level:
+                        parsed_arguments = args.level.split("-")
+                        if parsed_arguments[0] == 'root' or 0 < int(parsed_arguments[0]) <= max_depth:
+                            if ((0 < int(parsed_arguments[1]) <= max_depth and parsed_arguments[0] == 'root') or
+                                    (0 < int(parsed_arguments[1]) <= max_depth and
+                                     int(parsed_arguments[0]) < int(parsed_arguments[1]))):
+                                print(f"{print_levels(parsed_arguments[0], parsed_arguments[1])}")
+                            else:
+                                print(f"{TerminalColors.FAIL}Warning: Level {parsed_arguments[1]} does not exist or is "
+                                      f"smaller than level {parsed_arguments[0]}!{TerminalColors.ENDC}\n")
+                        else:
+                            print(f"{TerminalColors.FAIL}Warning: Level {parsed_arguments[0]} does not exist!"
+                                  f"{TerminalColors.ENDC}\n")
+
+                    # print single level
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!{TerminalColors.ENDC}"
-                              f"\n")
+                        if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
+                            print(f"{print_levels(args.level, None)}\n")
+                        else:
+                            print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!"
+                                  f"{TerminalColors.ENDC}\n")
 
                 elif args.notConnected:
-                    print(f"{print_levels('not_connected')}\n")
+                    print(f"{print_levels('not_connected', None)}\n")
 
             except:
                 print(
@@ -733,7 +773,7 @@ if __name__ == "__main__":
                             expand_all()
                         else:
                             scale_down_all()
-                        print(f"{print_levels()}\n")
+                        print(f"{print_levels(None, None)}\n")
                         update_tree_file()
                     else:
                         if args.expand:
@@ -841,7 +881,8 @@ if __name__ == "__main__":
 
                                     update_tree_file()
                                     print(f"{TerminalColors.OKGREEN}Disconnected nodes: {parsed_arguments[0]}-"
-                                          f"{parsed_arguments[1]} and all the child connections!{TerminalColors.ENDC}\n")
+                                          f"{parsed_arguments[1]} and all the child connections!"
+                                          f"{TerminalColors.ENDC}\n")
                                 else:
                                     print(f"{TerminalColors.FAIL}Warning: Edge between {parent_node_id} and "
                                           f"{child_node_id} does not exist!{TerminalColors.ENDC}\n")
@@ -907,7 +948,6 @@ if __name__ == "__main__":
                         print(f"{TerminalColors.FAIL}Warning: The filename must be of the type filename.txt!"
                               f"{TerminalColors.ENDC}\n")
 
-
             except:
                 print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
                       f"{TerminalColors.ENDC}\n")
@@ -942,15 +982,15 @@ if __name__ == "__main__":
                     print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}\n")
                     print(print_description())
                     print(print_separator())
-                    print(print_levels())
+                    print(print_levels(None, None))
 
                 except ValueError:
                     print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files or file does not exist!"
                           f"{TerminalColors.ENDC}")
             else:
                 print(
-                    f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' or "
-                    f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
+                    f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' "
+                    f"or python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
 
         else:
             print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}\n")
@@ -973,5 +1013,3 @@ if __name__ == "__main__":
 # - in connect node specificare parent piece order
 
 # TODO NODE DISCONNECT con un attributo (scollega tutti i nodi sotto un nodo): node --disconnect [nodeID1]
-
-# TODO stampa un intervallo di linee

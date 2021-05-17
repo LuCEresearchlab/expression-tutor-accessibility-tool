@@ -31,7 +31,7 @@ help or h
 print
 print --all or -a
 print --tree or -tr
-print --level or -lev [levelNumber]
+print --level or -lev [levelNumber] or [fromLevelNumber]-[toLevelNumber]
 print --node or -n [nodeID]
 print --description or -des
 print --notConnected or -nc
@@ -84,10 +84,9 @@ print --description or -des
 The command print with the attribute --description (shortcut -des), prints in the terminal the description of the tree diagram.
 
 ```
-print --level or -lev [levelNumber]
+print --level or -lev [levelNumber] or [fromLevelNumber]-[toLevelNumber]
 ```
-The command print with the attribute --level (shortcut -lev), prints the level levelNumber of the tree diagram in the terminal.
-
+The command print with the attribute --level (shortcut -lev), prints the level levelNumber of the tree diagram in the terminal if only one level is given as input. If a range of levels is given as input, it prints the range of lines.
 ```
 print --notConnected or -nc
 ````
