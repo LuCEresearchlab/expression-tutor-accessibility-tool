@@ -8,14 +8,14 @@
 graph -> graphDescription graphSeparator graphLevels {% function(d) {return {description: d[0], graphLevels: d[2]}} %}
 
 # The separator that we use is a repetition of hash symbols.
-graphSeparator -> ("#"):+
+graphSeparator -> ("-"):+
 
 # The graph description gives some main informations about it, so that the user can imagine what he should expect.
 # In detail it tells the user the graph type, the number of nodes that are in the diagram, the maximal depth of the
 # diagram and the structure of the nodes present in the diagram.
 graphDescription -> _ "type:" _ graphType _ ", nodes:" _ nodeNumber _ ", maxDepth:" _ maxDepth _
-					", nodeStructure:" _ nodeStructure _
-					{% function(d) {return {type: d[3], nodeNumber: d[7], maxDepth: d[11], nodeStructure: d[15]}} %}
+					", nodeStructure:" _ nodeStructure _ ", connector:" _ connector _
+					{% function(d) {return {type: d[3], nodeNumber: d[7], maxDepth: d[11], nodeStructure: d[15], connector: d[19]}} %}
 
 # graphType describes the type of diagram that we are dealing with.
 graphType -> "treeDiagram" {% id %}
@@ -36,20 +36,25 @@ nodeStructure -> "{parentID" _ ";" _ "nodeID" _ ";" _ "childrenID}"
 				| "{parentID" _ ";" _ "nodeID" _ ";" _ "childrenID" _ ";" _ "label" _ ";" _ "type" _ ";" _ "value}"
 				{% function (d) {return "{parentID; nodeID; childrenID; label; type; value}"} %}
 
+# The symbol used to indicate a connecting point in an expression for example: #+#
+connector -> dqstring {% id %}
+
 # graphLevel contains the information about the nodes
-graphLevels -> _ (levelDescription):* {% function (d) {return d[1]} %}
+graphLevels -> (levelDescription):* {% function (d) {return d[0]} %}
 
 # levelDescriptions tells us the depth level we are at and the nodes present in that level.
-levelDescription -> depthLevel (treeDiagramNode):+  {% function (d) {return {level: d[0], nodes: d[1]}} %}
+levelDescription -> _ depthLevel (treeDiagramNode):+  {% function (d) {return {level: d[1], nodes: d[2]}} %}
 
 # depthLevel tells us the depth level we are at, example @2 means level 2.
 depthLevel -> "@" unsigned_int {% function (d) {return d[1]} %}
+			| "@root" {% function (d) {return "root"} %}
+			| "@not_connected" {% function (d) {return "not_connected"} %}
 
 # The node structure can be different, depending on the usage of the tree diagram, we should recognise also the
 # "exploded" nodes and we have some components that are optional and not required in all nodes.
 treeDiagramNode ->
 				_ "{" _ parentDescription _ ";" _ nodeDescription _ ";" _ childrenDescription _ ";"
-				_ nodeLabelDescription _ optionalDescriptions _ "}" _
+				_ nodeLabelDescription _ optionalDescriptions _ "}"
 				{% function (d) {return {parentID: d[3], nodeID: d[7], childrenID: d[11], nodeLabel: d[15],
 				nodeOptionals: d[17]}} %}
 

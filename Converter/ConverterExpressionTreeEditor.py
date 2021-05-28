@@ -59,7 +59,7 @@ node_parser.add_argument("--type", "-t", help="Specifies type of a node.")
 node_parser.add_argument("--connect", "-con", help="Creates an edge between two nodes.")
 node_parser.add_argument("--root", "-r", help="Sets a new root node in the diagram.")
 node_parser.add_argument("--modify", "-m", help="Modifies a node.")
-node_parser.add_argument("--find", "-f", help="Finds a node.")
+node_parser.add_argument("--find", "-f", help="Finds a node based on label.")
 node_parser.add_argument("--disconnect", "-dis", help="Deletes an edge between two nodes.")
 node_parser.add_argument("--delete", "-del", help="Deletes a node.")
 
@@ -344,7 +344,7 @@ def print_description():
 
 
 # returns the separator between the description and the tree diagram as a string (for printing)
-def print_separator(number_of_separators=10, separator="#"):
+def print_separator(number_of_separators=10, separator="-"):
     return "" + separator * number_of_separators
 
 
@@ -997,10 +997,6 @@ if __name__ == "__main__":
 
 # TODO s:
 # printare le info dei nodi in base alla node Structure scelta
-
-# carattere spazio - modificarlo nella grammatica
-
-# vedere con federico lunghezza linea (nodo spezzato?)
 
 # quando connect nodeID1 nodeID2
 # -> se fattibile decidere quale parentPieceId

@@ -1,1 +1,3 @@
-type: treeDiagram, nodes: 5, maxDepth: 3, nodeStructure: {parentID; nodeID; childrenID}#########@1 {1;1;[2,3];"="}
+type: treeDiagram, nodes: 10, maxDepth: 2, nodeStructure: {parentID; nodeID; childrenID; label; type; value}, connector: "#"
+---------
+@1 {1;1;[2,3];"="} {root;2;[3,4];"nice"}
