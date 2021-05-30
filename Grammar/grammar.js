@@ -123,7 +123,7 @@ var grammar = {
             return d.join("");
         }
         },
-    {"name": "graph", "symbols": ["graphDescription", "graphSeparator", "graphLevels"], "postprocess": function(d) {return {description: d[0], graphLevels: d[2]}}},
+    {"name": "graph", "symbols": ["graphDescription", "graphSeparator", "graphLevels", "_"], "postprocess": function(d) {return {description: d[0], graphLevels: d[2]}}},
     {"name": "graphSeparator$ebnf$1$subexpression$1", "symbols": [{"literal":"-"}]},
     {"name": "graphSeparator$ebnf$1", "symbols": ["graphSeparator$ebnf$1$subexpression$1"]},
     {"name": "graphSeparator$ebnf$1$subexpression$2", "symbols": [{"literal":"-"}]},

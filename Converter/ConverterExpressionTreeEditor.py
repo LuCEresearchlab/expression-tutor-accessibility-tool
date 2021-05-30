@@ -1,8 +1,12 @@
+# import libraries
 import json
 import sys
 import os
 import argparse
-import datetime
+
+# import helper files
+import nearleyReader
+import utils
 
 
 # colors used to display messages in the terminal.
@@ -68,29 +72,11 @@ export_parser.add_argument("--json", "-j", help="Exports the modified tree to .j
 export_parser.add_argument("--txt", help="Exports the modified tree to .txt format.")
 
 
-# Creates a new file in .tree extension where the current status of the program is saved.
-# if called with an argument it returns name_treediagram.tree, else datetime_treediagram.tree
-def create_new_file(existing_filename=None):
-    if existing_filename:
-        new_file_name = existing_filename.split('.')[0] + "_treediagram.tree"
-    else:
-        new_file_name = get_date_time() + "_treediagram.tree"
-    f = open(new_file_name, "w")
-    f.close()
-    return new_file_name
-
-
-def get_date_time():
-    x = datetime.datetime.now()
-    return (x.strftime("%Y") + x.strftime("%m") + x.strftime("%d") + "_" + x.strftime("%H") + x.strftime("%M")
-            + x.strftime("%S"))
-
-
 # given a file loads all the information from the file necessary to run the program.
 def load_file(filename=None):
     edge_dictionary.clear()
     node_dictionary.clear()
-    file_node_structure = "{parentID; nodeID; childrenID; label, type, value}"
+    file_node_structure = "{parentID; nodeID; childrenID; label; type; value}"
     tree_boolean = False
     file_max_depth = 0
 
@@ -98,7 +84,7 @@ def load_file(filename=None):
         if filename.lower().endswith('.json'):
             # if file exists
             if os.path.isfile(filename):
-                new_filename = create_new_file(filename)
+                new_filename = utils.create_new_file(filename)
                 # read the json file and copies the content to local variables, creating a dictionary for the nodes
                 # and one for the edges
                 with open(filename, 'r') as f:
@@ -119,17 +105,39 @@ def load_file(filename=None):
                     last_edge_created = edge
 
                 for node in (input_data['nodes']):
+                    node_value = input_data['nodes'][node]['value']
+                    if node_value == "Not connected":
+                        node_value = "NotConnected"
+
                     node_dictionary[node] = {'new_id': None,
                                              'expanded': False,
                                              'pieces': input_data['nodes'][node]['pieces'],
                                              'type': input_data['nodes'][node]['type'],
-                                             'value': input_data['nodes'][node]['value']}
+                                             'value': node_value}
                     last_node_created = node
                 f.close()
 
             # raise an error if file does not exist
             else:
-                raise ValueError
+                raise FileNotFoundError
+
+        # if file is of type .txt, we parse it with nearley.js parser
+        elif filename.lower().endswith('.txt'):
+            # if file exists
+            if os.path.isfile(filename):
+                (filename, new_filename, read_node_dictionary, last_node_created, read_edge_dictionary, last_edge_created,
+                 file_selected_root_node, file_node_connector, file_node_structure, file_max_depth,
+                 tree_boolean) = nearleyReader.read_txt_file_nearley(filename)
+
+                # copy elements from new created dictionary in old one
+                for i in read_node_dictionary:
+                    node_dictionary[i] = read_node_dictionary[i]
+                for l in read_edge_dictionary:
+                    edge_dictionary[l] = read_edge_dictionary[l]
+
+            # raise an error if file does not exist
+            else:
+                 raise FileNotFoundError
 
         # if file is .tree parse it for recover last state (with a json parser)
         elif filename.lower().endswith('.tree'):
@@ -179,15 +187,15 @@ def load_file(filename=None):
 
             # raise an error if file does not exist
             else:
-                raise ValueError
+                raise FileNotFoundError
 
         # raise an error if file is not json file
         else:
-            raise ValueError
+            raise TypeError
 
     # if load_file called without argument (initialization of a blank tree diagram)
     else:
-        new_filename = create_new_file()
+        new_filename = utils.create_new_file()
 
         last_node_created = '00'  # 00 indicates no nodes
         last_edge_created = '00'  # 00 indicates no edges
@@ -231,7 +239,7 @@ def populate_levels(root_node):
         new_id_counter = 1
         node_levels["not_connected"] = []
         for node in node_dictionary:
-            if node_dictionary[node]['value'] == 'Not connected':
+            if node_dictionary[node]['value'] == 'NotConnected':
                 node_levels["not_connected"].append(node)
                 node_counter += 1
 
@@ -269,7 +277,7 @@ def populate_levels(root_node):
             node_levels["not_connected"] = []
             new_id_counter = 0
             for node in node_dictionary:
-                node_dictionary[node].update({'new_id': new_id_counter, 'value': 'Not connected'})
+                node_dictionary[node].update({'new_id': new_id_counter, 'value': 'NotConnected'})
                 node_levels["not_connected"].append(node)
                 new_id_counter += 1
             delete_connection_all()
@@ -282,7 +290,7 @@ def populate_levels(root_node):
 # the file format is the same as the input json files that we read.
 def export(export_filename):
     if not export_filename:
-        export_filename = get_date_time() + "_treediagram.json"
+        export_filename = utils.get_date_time() + "_treediagram.json"
 
     # restructure the node dictionary, so that it contains the same fields as the expression tutor json file.
     node_export_dictionary = {}
@@ -354,7 +362,7 @@ def set_root(new_root):
     new_id_counter = 0
     for node in node_dictionary:
         if node != new_root:
-            node_dictionary[node].update({'new_id': new_id_counter, 'value': 'Not connected'})
+            node_dictionary[node].update({'new_id': new_id_counter, 'value': 'NotConnected'})
             new_id_counter += 1
     delete_connection_all()
 
@@ -370,7 +378,7 @@ def create_node(label, node_type):
                                  'expanded': False,
                                  'pieces': label,
                                  'type': node_type,
-                                 'value': "Not connected"}
+                                 'value': "NotConnected"}
     return node_key
 
 
@@ -407,7 +415,7 @@ def disconnect_nodes(edge_remove):
                 edge = check_edge(str(nodes_to_check_connections[0]), check_node_get_original_id(str(child)))
                 del edge_dictionary[edge]
 
-        node_dictionary[nodes_to_check_connections[0]].update({'value': 'Not connected'})
+        node_dictionary[nodes_to_check_connections[0]].update({'value': 'NotConnected'})
         nodes_to_check_connections.pop(0)
 
 
@@ -431,7 +439,7 @@ def delete_node(node_id_to_delete):
     parent_node_id = get_parent_node(node_id_to_delete)
 
     # case the node is not connected
-    if node_dictionary[node_id_to_delete]['value'] == 'Not connected':
+    if node_dictionary[node_id_to_delete]['value'] == 'NotConnected':
         del node_dictionary[node_id_to_delete]
 
     # case the node has a parent
@@ -604,7 +612,7 @@ def get_string(message):
         if string != '':
             return string
         else:
-            print(f"{TerminalColors.FAIL}Warning: Your input was empty!{TerminalColors.ENDC}")
+            print(f"{TerminalColors.FAIL}Warning: Your input was empty!{TerminalColors.ENDC}\n")
 
 
 # if the node exists returns the original ID of the node
@@ -666,21 +674,22 @@ if __name__ == "__main__":
 
             print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}\n")
 
-            # TODO da usare per developer mode
-            # --------------------------------
-            # dev_print_infos()
-            # --------------------------------
-
             print(print_description())
             print(print_separator())
             print(print_levels(None, None))
 
-        except ValueError:
-            print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files or file does not exist!"
-                  f"{TerminalColors.ENDC}")
+        except FileNotFoundError:
+            print(f"{TerminalColors.FAIL}Warning: File does not exist!{TerminalColors.ENDC}\n")
+        except TypeError:
+            print(f"{TerminalColors.FAIL}Warning: Accepts only .json, .txt and .tree files!"
+                  f"{TerminalColors.ENDC}\n")
+        except FileExistsError:
+            print(f"{TerminalColors.FAIL}Warning: The nearley parser was not able to parse the file!"
+                  f"{TerminalColors.ENDC}\n")
+
     else:
         print(f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' or "
-              f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
+              f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}\n")
 
     while True:
         command = get_string("Insert command: ")
@@ -705,7 +714,7 @@ if __name__ == "__main__":
                   f'\nnode --modify or -m [nodeID] --label or -l [label] --type or -t [type] '
                   f'\nnode --root or -r [nodeID] \nnode --find or -f [argument] \nexport '
                   f'\nexport --json or -j [filename.json] \nexport --txt [exportfile.txt] '
-                  f'\nload [filename.tree / filename.json / ""] \n')
+                  f'\nload [filename.tree / filename.json / filename.txt / ""] \n')
 
         # PRINT commands
         elif commandList[0] == 'print':
@@ -984,28 +993,23 @@ if __name__ == "__main__":
                     print(print_separator())
                     print(print_levels(None, None))
 
-                except ValueError:
-                    print(f"{TerminalColors.FAIL}Warning: Accepts only .json and .tree files or file does not exist!"
-                          f"{TerminalColors.ENDC}")
+                except FileNotFoundError:
+                    print(f"{TerminalColors.FAIL}Warning: File does not exist!{TerminalColors.ENDC}\n")
+                except TypeError:
+                    print(f"{TerminalColors.FAIL}Warning: Accepts only .json, .txt and .tree files!"
+                          f"{TerminalColors.ENDC}\n")
+                except FileExistsError:
+                    print(f"{TerminalColors.FAIL}Warning: The nearley parser was not able to parse the file!"
+                          f"{TerminalColors.ENDC}\n")
             else:
                 print(
                     f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' "
-                    f"or python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}")
+                    f"or python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}\n")
+
+        # DEBUGGER command
+        # prints some helpful states and general information about the program to the terminal for developing purposes.
+        elif commandList[0] == 'debugger':
+            dev_print_infos()
 
         else:
             print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}\n")
-
-# TODO s:
-# printare le info dei nodi in base alla node Structure scelta
-
-# quando connect nodeID1 nodeID2
-# -> se fattibile decidere quale parentPieceId
-
-# - check 'parentPieceId' order
-
-# - indicare parentPieceId
-# {2:1;6;null;"# + #";noType;noValue} 2:1 per indicare parentPieceId?
-
-# - in connect node specificare parent piece order
-
-# TODO NODE DISCONNECT con un attributo (scollega tutti i nodi sotto un nodo): node --disconnect [nodeID1]

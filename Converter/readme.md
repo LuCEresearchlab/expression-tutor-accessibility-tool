@@ -47,7 +47,7 @@ node --find or -f [argument]
 export
 export --json or -j [filename.json]
 export --txt [exportfile.txt]
-load [filename.tree / filename.json / ""]
+load [filename.tree / filename.json / filename.txt / ""]
 ```
 
 ###Commands description
@@ -153,6 +153,11 @@ export --txt [exportfile.txt]
 The command export with the attribute --txt, exports a txt file with the actual state of the diagram formatted as we normally see it in the terminal.
 
 ```
-load [filename.tree / filename.json / ""]
+load [filename.tree / filename.json / filename.txt / ""]
 ```
-The command load loads an existing file of type .json (from the expression tutor) or .tree (last state of a tree diagram) into the program. If the command load is called without a filename, it creates a new empty tree diagram.
+The command load loads an existing file of type .json (from the expression tutor), .tree (last state of a tree diagram) or .txt (a file to parse with the nearley parser) into the program. If the command load is called without a filename, it creates a new empty tree diagram.
+
+```
+debugger
+```
+We implemented also the command debugger for debugging and developing purposes that can't be found in the official list of commands. You can use this command to print some helpful states and general information about the program to the terminal.

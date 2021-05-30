@@ -5,7 +5,7 @@
 
 # A diagram is composed of a description and the the list of levels where the nodes are contained, the description
 # and the list are separated by a separator.
-graph -> graphDescription graphSeparator graphLevels {% function(d) {return {description: d[0], graphLevels: d[2]}} %}
+graph -> graphDescription graphSeparator graphLevels _ {% function(d) {return {description: d[0], graphLevels: d[2]}} %}
 
 # The separator that we use is a repetition of hash symbols.
 graphSeparator -> ("-"):+
