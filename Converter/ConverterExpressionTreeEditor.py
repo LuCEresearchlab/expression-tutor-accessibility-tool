@@ -345,6 +345,13 @@ def update_tree_file():
     return
 
 
+# when exporting a txt or json file with a name parameter, update consequently also the name of the .tree file
+def rename_tree_file(exported_file_name):
+    exported_file_name = exported_file_name.split('.')[0] + "_td.tree"
+    os.rename(read_file.new_filename, exported_file_name)
+    read_file.new_filename = exported_file_name
+
+
 # returns the description of the tree diagram as a string (for printing)
 def print_description():
     return (f'type: treeDiagram, nodes: {len(node_dictionary)}, maxDepth: {max_depth}, '
@@ -688,8 +695,8 @@ if __name__ == "__main__":
                   f"{TerminalColors.ENDC}\n")
 
     else:
-        print(f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' or "
-              f"python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}\n")
+        print(f"{TerminalColors.FAIL}Warning: Expects input of type python3 ConverterExpressionTreeEditor.py or "
+              f"python3 ConverterExpressionTreeEditor.py filename.tree/json/txt!{TerminalColors.ENDC}\n")
 
     while True:
         command = get_string("Insert command: ")
@@ -937,6 +944,7 @@ if __name__ == "__main__":
                     if args.json:
                         if args.json.lower().endswith('.json'):
                             exported_file = export(args.json)
+                            rename_tree_file(exported_file)
                             print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
                                   f"{TerminalColors.ENDC}\n")
                         else:
@@ -945,12 +953,14 @@ if __name__ == "__main__":
                                 f"{TerminalColors.ENDC}\n")
                     else:
                         exported_file = export(None)
+                        rename_tree_file(exported_file)
                         print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
                               f"{TerminalColors.ENDC}\n")
 
                 elif args.txt:
                     if args.txt.lower().endswith('.txt'):
                         export_txt(args.txt)
+                        rename_tree_file(args.txt)
                         print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {args.txt}"
                               f"{TerminalColors.ENDC}\n")
                     else:

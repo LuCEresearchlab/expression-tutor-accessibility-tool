@@ -1,0 +1,94 @@
+{
+  "nodes": {
+    "n1": {
+      "pieces": "+",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n2": {
+      "pieces": "3",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n3": {
+      "pieces": "*",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n4": {
+      "pieces": "+",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n5": {
+      "pieces": "3",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n6": {
+      "pieces": "5",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    },
+    "n7": {
+      "pieces": "8",
+      "x": 0,
+      "y": 0,
+      "type": "",
+      "value": "",
+      "isFinal": false
+    }
+  },
+  "edges": {
+    "e0": {
+      "parentNodeId": "n1",
+      "childNodeId": "n2",
+      "parentPieceId": 0
+    },
+    "e1": {
+      "parentNodeId": "n1",
+      "childNodeId": "n3",
+      "parentPieceId": 0
+    },
+    "e2": {
+      "parentNodeId": "n3",
+      "childNodeId": "n4",
+      "parentPieceId": 0
+    },
+    "e3": {
+      "parentNodeId": "n3",
+      "childNodeId": "n5",
+      "parentPieceId": 0
+    },
+    "e4": {
+      "parentNodeId": "n4",
+      "childNodeId": "n6",
+      "parentPieceId": 0
+    },
+    "e5": {
+      "parentNodeId": "n4",
+      "childNodeId": "n7",
+      "parentPieceId": 0
+    }
+  },
+  "selectedRootNode": "n1",
+  "nodeConnector": "#"
+}

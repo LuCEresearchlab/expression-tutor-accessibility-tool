@@ -86,7 +86,7 @@ The command print with the attribute --description (shortcut -des), prints in th
 ```
 print --level or -lev [levelNumber] or [fromLevelNumber]-[toLevelNumber]
 ```
-The command print with the attribute --level (shortcut -lev), prints the level levelNumber of the tree diagram in the terminal if only one level is given as input. If a range of levels is given as input, it prints the range of lines.
+The command print with the attribute --level (shortcut -lev), prints the level levelNumber of the tree diagram in the terminal if only one level is given as input. If a range of levels is given as input, it prints the range of levels.
 ```
 print --notConnected or -nc
 ````
@@ -125,12 +125,12 @@ The command node with the attribute --modify (shortcut -m), modifies the node no
 ```
 node --root or -r [nodeID]
 ```
-The command node with the attribute --root (shortcut -r), changes the root node of the tree diagram to nodeID, all the other nodes are changed to "not connected" and all the edges are deleted.
+The command node with the attribute --root (shortcut -r), changes the root node of the tree diagram to nodeID, all the other nodes are changed to status "NotConnected" and all the edges are deleted.
 
 ```
 node --find or -f [argument]
 ```
-The command node with the attribute --find (shortcut -f), prints in the terminal the node ID's and the nodes that contains the argument (a letter, number, symbol or word) that is passed to the function.
+The command node with the attribute --find (shortcut -f), prints in the terminal the node ID's and the nodes that contains the argument (a letter, number, symbol or word) that is passed to the function in the label of the node.
 
 ```
 node --expand or -ex [nodeID or "all"]
@@ -145,7 +145,7 @@ The command node with the attribute --scaleDown (shortcut -sd), hides the labels
 ```
 export or export --json or -j [filename.json]
 ````
-The command export or export with the attribute --json (shortcut -j), exports a json file of the tree diagram that is compatible with the expression tutor. If you use only export the script generates a filename, if you use he attribute --json you can specify the filename of the new file.
+The command export or export with the attribute --json (shortcut -j), exports a json file of the tree diagram that is compatible with the Expression Tutor. If you use only export the script generates a new filename, if you use the attribute --json you can specify the filename of the new file.
 
 ```
 export --txt [exportfile.txt]
@@ -155,7 +155,7 @@ The command export with the attribute --txt, exports a txt file with the actual 
 ```
 load [filename.tree / filename.json / filename.txt / ""]
 ```
-The command load loads an existing file of type .json (from the expression tutor), .tree (last state of a tree diagram) or .txt (a file to parse with the nearley parser) into the program. If the command load is called without a filename, it creates a new empty tree diagram.
+The command load loads an existing file of type .json (from the expression tutor), .tree (last state of a tree diagram) or .txt (a file to parse with the nearley.js parser) into the program. If the command load is called without a filename, it creates a new empty tree diagram.
 
 ```
 debugger

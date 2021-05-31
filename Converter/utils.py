@@ -9,9 +9,9 @@ def create_new_file(existing_filename=None):
         if "/" in existing_filename:
             existing_filename = existing_filename.split('/')[-1]
         # removes the ending
-        new_file_name = existing_filename.split('.')[0] + "_treediagram.tree"
+        new_file_name = existing_filename.split('.')[0] + "_td.tree"
     else:
-        new_file_name = get_date_time() + "_treediagram.tree"
+        new_file_name = get_date_time() + "_td.tree"
     f = open(new_file_name, "w")
     f.close()
     return new_file_name
