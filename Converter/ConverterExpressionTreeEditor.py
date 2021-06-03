@@ -3,23 +3,11 @@ import json
 import sys
 import os
 import argparse
+import platform
 
 # import helper files
 import nearleyReader
 import utils
-
-
-# colors used to display messages in the terminal.
-class TerminalColors:
-    HEADER = '\033[95m'
-    OKBLUE = '\033[94m'
-    OKCYAN = '\033[96m'
-    OKGREEN = '\033[92m'
-    WARNING = '\033[93m'
-    FAIL = '\033[91m'
-    ENDC = '\033[0m'
-    BOLD = '\033[1m'
-    UNDERLINE = '\033[4m'
 
 
 # defines the file struct that is used to parse a file and return a struct of that file.
@@ -125,7 +113,8 @@ def load_file(filename=None):
         elif filename.lower().endswith('.txt'):
             # if file exists
             if os.path.isfile(filename):
-                (filename, new_filename, read_node_dictionary, last_node_created, read_edge_dictionary, last_edge_created,
+                (filename, new_filename, read_node_dictionary, last_node_created, read_edge_dictionary,
+                 last_edge_created,
                  file_selected_root_node, file_node_connector, file_node_structure, file_max_depth,
                  tree_boolean) = nearleyReader.read_txt_file_nearley(filename)
 
@@ -137,7 +126,7 @@ def load_file(filename=None):
 
             # raise an error if file does not exist
             else:
-                 raise FileNotFoundError
+                raise FileNotFoundError
 
         # if file is .tree parse it for recover last state (with a json parser)
         elif filename.lower().endswith('.tree'):
@@ -619,7 +608,7 @@ def get_string(message):
         if string != '':
             return string
         else:
-            print(f"{TerminalColors.FAIL}Warning: Your input was empty!{TerminalColors.ENDC}\n")
+            utils.print_message(False, f"Warning: Your input was empty!\n")
 
 
 # if the node exists returns the original ID of the node
@@ -653,17 +642,17 @@ def find_node(argument):
 # main function
 if __name__ == "__main__":
 
+    max_depth = 0
+    node_levels = {}
+    node_dictionary = {}
+    edge_dictionary = {}
+    last_node_created = '00'  # 00 indicates no nodes
+    last_edge_created = '00'  # 00 indicates no edges
+
     if 0 < len(sys.argv) < 3:
         file_to_read = None
         if len(sys.argv) == 2:
             file_to_read = sys.argv[1]
-
-        node_levels = {}
-        node_dictionary = {}
-        edge_dictionary = {}
-        last_node_created = '00'  # 00 indicates no nodes
-        last_edge_created = '00'  # 00 indicates no edges
-        max_depth = 0
 
         try:
             read_file, edge_dictionary, node_dictionary = load_file(file_to_read)
@@ -686,17 +675,15 @@ if __name__ == "__main__":
             print(print_levels(None, None))
 
         except FileNotFoundError:
-            print(f"{TerminalColors.FAIL}Warning: File does not exist!{TerminalColors.ENDC}\n")
+            utils.print_message(False, f"Warning: File does not exist!\n")
         except TypeError:
-            print(f"{TerminalColors.FAIL}Warning: Accepts only .json, .txt and .tree files!"
-                  f"{TerminalColors.ENDC}\n")
+            utils.print_message(False, f"Warning: Accepts only .json, .txt and .tree files!\n")
         except FileExistsError:
-            print(f"{TerminalColors.FAIL}Warning: The nearley parser was not able to parse the file!"
-                  f"{TerminalColors.ENDC}\n")
+            utils.print_message(False, f"Warning: The nearley.js parser was not able to parse the file!\n")
 
     else:
-        print(f"{TerminalColors.FAIL}Warning: Expects input of type python3 ConverterExpressionTreeEditor.py or "
-              f"python3 ConverterExpressionTreeEditor.py filename.tree/json/txt!{TerminalColors.ENDC}\n")
+        utils.print_message(False, f"Warning: Expects input of type python3 ConverterExpressionTreeEditor.py or "
+                                   f"python3 ConverterExpressionTreeEditor.py filename.tree/json/txt!\n")
 
     while True:
         command = get_string("Insert command: ")
@@ -744,7 +731,7 @@ if __name__ == "__main__":
                     if old_id:
                         print(f"{print_node(old_id)}\n")
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Node {args.node} does not exist!{TerminalColors.ENDC}\n")
+                        utils.print_message(False, f"Warning: Node {args.node} does not exist!\n")
 
                 elif args.level:
                     # print more levels
@@ -756,27 +743,23 @@ if __name__ == "__main__":
                                      int(parsed_arguments[0]) < int(parsed_arguments[1]))):
                                 print(f"{print_levels(parsed_arguments[0], parsed_arguments[1])}")
                             else:
-                                print(f"{TerminalColors.FAIL}Warning: Level {parsed_arguments[1]} does not exist or is "
-                                      f"smaller than level {parsed_arguments[0]}!{TerminalColors.ENDC}\n")
+                                utils.print_message(False, f"Warning: Level {parsed_arguments[1]} does not exist or is "
+                                                           f"smaller than level {parsed_arguments[0]}!\n")
                         else:
-                            print(f"{TerminalColors.FAIL}Warning: Level {parsed_arguments[0]} does not exist!"
-                                  f"{TerminalColors.ENDC}\n")
+                            utils.print_message(False, f"Warning: Level {parsed_arguments[0]} does not exist!\n")
 
                     # print single level
                     else:
                         if args.level in ["root", "not_connected"] or 0 < int(args.level) <= max_depth:
                             print(f"{print_levels(args.level, None)}\n")
                         else:
-                            print(f"{TerminalColors.FAIL}Warning: Level {args.level} does not exist!"
-                                  f"{TerminalColors.ENDC}\n")
+                            utils.print_message(False, f"Warning: Level {args.level} does not exist!\n")
 
                 elif args.notConnected:
                     print(f"{print_levels('not_connected', None)}\n")
 
             except:
-                print(
-                    f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
-                    f"{TerminalColors.ENDC}\n")
+                utils.print_message(False, f"Warning: Something went wrong with command {commandList[0]}!\n")
 
         # NODE commands
         elif commandList[0] == 'node':
@@ -805,8 +788,7 @@ if __name__ == "__main__":
                             print(f"{print_node(old_id)}\n")
                             update_tree_file()
                         else:
-                            print(f"{TerminalColors.FAIL}Warning: Node {args_id} does not exist!{TerminalColors.ENDC}"
-                                  f"\n")
+                            utils.print_message(False, f"Warning: Node {args_id} does not exist!\n")
 
                 # creates a new node
                 elif args.create:
@@ -824,16 +806,15 @@ if __name__ == "__main__":
                     last_node_created = new_node
                     max_depth, node_levels = populate_levels(selected_root_node)
                     update_tree_file()
-                    print(f"{TerminalColors.OKGREEN}Created node: {print_node(new_node)}"
-                          f"{TerminalColors.ENDC}\n")
+                    utils.print_message(True, f"Created node: {print_node(new_node)}\n")
 
                 # finds a node
                 elif args.find:
                     found_nodes = find_node(args.find)
                     if not found_nodes:
-                        print(f"{TerminalColors.FAIL}No node contains: {args.find}{TerminalColors.ENDC}\n")
+                        utils.print_message(False, f"No node contains: {args.find}\n")
                     else:
-                        print(f"{TerminalColors.OKGREEN}Found nodes:{TerminalColors.ENDC}")
+                        utils.print_message(True, f"Found nodes:", False)
                         for node in found_nodes:
                             print(f"ID: {node_dictionary[node]['new_id']} - NODE: {print_node(node)}")
                         print('')
@@ -843,8 +824,8 @@ if __name__ == "__main__":
                     found_id = check_node_get_original_id(args.modify)
                     if found_id:
                         if not args.label and not args.type:
-                            print(f"{TerminalColors.FAIL}Warning: To modify the node {args.modify} the script needs "
-                                  f"one or two arguments!{TerminalColors.ENDC}\n")
+                            utils.print_message(False, f"Warning: To modify the node {args.modify} the script needs "
+                                                       f"one or two arguments!\n")
                         else:
                             if args.label:
                                 node_dictionary[found_id].update({"pieces": args.label})
@@ -852,11 +833,9 @@ if __name__ == "__main__":
                                 node_dictionary[found_id].update({"type": args.type})
                             max_depth, node_levels = populate_levels(selected_root_node)
                             update_tree_file()
-                            print(f"{TerminalColors.OKGREEN}Modified node: {print_node(found_id)}"
-                                  f"{TerminalColors.ENDC}\n")
+                            utils.print_message(True, f"Modified node: {print_node(found_id)}\n")
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Node {args.modify} does not exist!{TerminalColors.ENDC}"
-                              f"\n")
+                        utils.print_message(False, f"Warning: Node {args.modify} does not exist!\n")
 
                 # connects a node that is already in the diagram with a node that is not connected.
                 elif args.connect:
@@ -870,14 +849,14 @@ if __name__ == "__main__":
                                 last_edge_created = new_edge
                                 max_depth, node_levels = populate_levels(selected_root_node)
                                 update_tree_file()
-                                print(f"{TerminalColors.OKGREEN}Connected nodes: {parsed_arguments[0]}-"
-                                      f"{parsed_arguments[1]}{TerminalColors.ENDC}\n")
+                                utils.print_message(True, f"Connected nodes: {parsed_arguments[0]}-"
+                                                          f"{parsed_arguments[1]}\n")
                             else:
-                                print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[1]} does not exist, or "
-                                      f"is already connected!{TerminalColors.ENDC}\n")
+                                utils.print_message(False, f"Warning: Node {parsed_arguments[1]} does not exist, or "
+                                                           f"is already connected!\n")
                         else:
-                            print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[0]} does not exist, or is not "
-                                  f"yet connected!{TerminalColors.ENDC}\n")
+                            utils.print_message(False, f"Warning: Node {parsed_arguments[0]} does not exist, or is not "
+                                                       f"yet connected!\n")
 
                 # disconnects two nodes that are connected in the diagram.
                 elif args.disconnect:
@@ -896,18 +875,17 @@ if __name__ == "__main__":
                                     max_depth, node_levels = populate_levels(selected_root_node)
 
                                     update_tree_file()
-                                    print(f"{TerminalColors.OKGREEN}Disconnected nodes: {parsed_arguments[0]}-"
-                                          f"{parsed_arguments[1]} and all the child connections!"
-                                          f"{TerminalColors.ENDC}\n")
+                                    utils.print_message(True, f"Disconnected nodes: {parsed_arguments[0]}-"
+                                                              f"{parsed_arguments[1]} and all the child connections!\n")
                                 else:
-                                    print(f"{TerminalColors.FAIL}Warning: Edge between {parent_node_id} and "
-                                          f"{child_node_id} does not exist!{TerminalColors.ENDC}\n")
+                                    utils.print_message(False, f"Warning: Edge between {parent_node_id} and "
+                                                               f"{child_node_id} does not exist!\n")
                             else:
-                                print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[1]} does not exist, or is "
-                                      f"not connected!{TerminalColors.ENDC}\n")
+                                utils.print_message(False, f"Warning: Node {parsed_arguments[1]} does not exist, or is "
+                                                           f"not connected!\n")
                         else:
-                            print(f"{TerminalColors.FAIL}Warning: Node {parsed_arguments[0]} does not exist, or is not "
-                                  f"connected!{TerminalColors.ENDC}\n")
+                            utils.print_message(False, f"Warning: Node {parsed_arguments[0]} does not exist, or is not "
+                                                       f"connected!\n")
 
                 # deletes a node in thee tree diagram
                 elif args.delete:
@@ -916,9 +894,9 @@ if __name__ == "__main__":
                         delete_node(node_id)
                         max_depth, node_levels = populate_levels(selected_root_node)
                         update_tree_file()
-                        print(f"{TerminalColors.OKGREEN}Deleted node: {node_id}{TerminalColors.ENDC}\n")
+                        utils.print_message(True, f"Deleted node: {node_id}\n")
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: Node {node_id} does not exist!{TerminalColors.ENDC}\n")
+                        utils.print_message(False, f"Warning: Node {node_id} does not exist!\n")
 
                 # changes the root node, all the other nodes are changed to not connected and all the edges are deleted.
                 elif args.root:
@@ -927,12 +905,10 @@ if __name__ == "__main__":
                     set_root(selected_root_node)
                     max_depth, node_levels = populate_levels(selected_root_node)
                     update_tree_file()
-                    print(f"{TerminalColors.OKGREEN}Changed root node to: {args.root}{TerminalColors.ENDC}\n")
+                    utils.print_message(True, f"Changed root node to: {args.root}\n")
 
             except:
-                print(
-                    f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
-                    f"{TerminalColors.ENDC}\n")
+                utils.print_message(False, f"Warning: Something went wrong with command {commandList[0]}!\n")
 
         # EXPORT commands
         elif commandList[0] == 'export':
@@ -945,31 +921,24 @@ if __name__ == "__main__":
                         if args.json.lower().endswith('.json'):
                             exported_file = export(args.json)
                             rename_tree_file(exported_file)
-                            print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
-                                  f"{TerminalColors.ENDC}\n")
+                            utils.print_message(True, f"Exported tree diagram to file: {exported_file}\n")
                         else:
-                            print(
-                                f"{TerminalColors.FAIL}Warning: The filename must be of the type filename.json!"
-                                f"{TerminalColors.ENDC}\n")
+                            utils.print_message(False, f"Warning: The filename must be of the type filename.json!\n")
                     else:
                         exported_file = export(None)
                         rename_tree_file(exported_file)
-                        print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {exported_file}"
-                              f"{TerminalColors.ENDC}\n")
+                        utils.print_message(True, f"Exported tree diagram to file: {exported_file}\n")
 
                 elif args.txt:
                     if args.txt.lower().endswith('.txt'):
                         export_txt(args.txt)
                         rename_tree_file(args.txt)
-                        print(f"{TerminalColors.OKGREEN}Exported tree diagram to file: {args.txt}"
-                              f"{TerminalColors.ENDC}\n")
+                        utils.print_message(True, f"Exported tree diagram to file: {args.txt}\n")
                     else:
-                        print(f"{TerminalColors.FAIL}Warning: The filename must be of the type filename.txt!"
-                              f"{TerminalColors.ENDC}\n")
+                        utils.print_message(False, f"Warning: The filename must be of the type filename.txt!\n")
 
             except:
-                print(f"{TerminalColors.FAIL}Warning: Something went wrong with command {commandList[0]}!"
-                      f"{TerminalColors.ENDC}\n")
+                utils.print_message(False, f"Warning: Something went wrong with command {commandList[0]}!\n")
 
         # LOAD command
         # loads a new file of type json/tree/empty (creation of a new tree)
@@ -1004,17 +973,14 @@ if __name__ == "__main__":
                     print(print_levels(None, None))
 
                 except FileNotFoundError:
-                    print(f"{TerminalColors.FAIL}Warning: File does not exist!{TerminalColors.ENDC}\n")
+                    utils.print_message(False, f"Warning: File does not exist!\n")
                 except TypeError:
-                    print(f"{TerminalColors.FAIL}Warning: Accepts only .json, .txt and .tree files!"
-                          f"{TerminalColors.ENDC}\n")
+                    utils.print_message(False, f"Warning: Accepts only .json, .txt and .tree files!\n")
                 except FileExistsError:
-                    print(f"{TerminalColors.FAIL}Warning: The nearley parser was not able to parse the file!"
-                          f"{TerminalColors.ENDC}\n")
+                    utils.print_message(False, f"Warning: The nearley parser was not able to parse the file!\n")
             else:
-                print(
-                    f"{TerminalColors.FAIL}Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' "
-                    f"or python3 ConverterExpressionTreeEditor.py filename.tree/json!{TerminalColors.ENDC}\n")
+                utils.print_message(False, f"Warning: Expects input of type python3 'ConverterExpressionTreeEditor.py' "
+                                           f"or python3 ConverterExpressionTreeEditor.py filename.tree/json!\n")
 
         # DEBUGGER command
         # prints some helpful states and general information about the program to the terminal for developing purposes.
@@ -1022,4 +988,4 @@ if __name__ == "__main__":
             dev_print_infos()
 
         else:
-            print(f"{TerminalColors.FAIL}Warning: Command {commandList[0]} does not exist!{TerminalColors.ENDC}\n")
+            utils.print_message(False, f"Warning: Command {commandList[0]} does not exist!\n")
