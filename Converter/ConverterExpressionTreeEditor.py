@@ -66,6 +66,8 @@ def load_file(filename=None):
     file_node_structure = "{parentID; nodeID; childrenID; label; type; value}"
     tree_boolean = False
     file_max_depth = 0
+    last_node_created = '00'  # 00 indicates no nodes
+    last_edge_created = '00'  # 00 indicates no edges
 
     if filename:
         if filename.lower().endswith('.json'):
@@ -650,6 +652,7 @@ if __name__ == "__main__":
     edge_dictionary = {}
     last_node_created = '00'  # 00 indicates no nodes
     last_edge_created = '00'  # 00 indicates no edges
+    selected_root_node = None
 
     if 0 < len(sys.argv) < 3:
         file_to_read = None
@@ -671,7 +674,6 @@ if __name__ == "__main__":
                 update_tree_file()
 
             print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}\n")
-
             print(print_description())
             print(print_separator())
             print(print_levels(None, None))
