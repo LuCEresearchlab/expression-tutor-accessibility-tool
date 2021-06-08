@@ -3,7 +3,6 @@ import json
 import sys
 import os
 import argparse
-import platform
 
 # import helper files
 import nearleyReader
@@ -219,7 +218,8 @@ def dev_print_infos():
 
 
 # populate levels takes the nodes and gives the new id's and creates the new tree structure
-def populate_levels(root_node):
+# only if assign_new_ids is true all the nodes receive a new id for identification
+def populate_levels(root_node, assign_new_ids):
     max_found_depth = 0
     node_levels.clear()
 
@@ -232,7 +232,8 @@ def populate_levels(root_node):
                 node_levels["not_connected"].append(node)
                 node_counter += 1
 
-        node_dictionary[root_node].update({'new_id': 'root'})
+        if assign_new_ids:
+            node_dictionary[root_node].update({'new_id': 'root'})
         node_levels["root"] = [root_node]
         actual_level = "root"
         node_counter += 1
@@ -247,14 +248,15 @@ def populate_levels(root_node):
                             node_levels[next_level] = []
                             max_found_depth += 1
                         node_levels[next_level].append(edge_dictionary[edge]['childNodeId'])
-                        node_dictionary[edge_dictionary[edge]['childNodeId']].update({'new_id': new_id_counter})
+                        if assign_new_ids:
+                            node_dictionary[edge_dictionary[edge]['childNodeId']].update({'new_id': new_id_counter})
+                            new_id_counter += 1
                         node_counter += 1
-                        new_id_counter += 1
 
             actual_level = 1 if actual_level == "root" else actual_level + 1
 
-        # assign new id to not connected nodes and set expanded value to False.
-        if "not_connected" in node_levels:
+        # assign new id to not connected nodes
+        if "not_connected" in node_levels and assign_new_ids:
             for not_connected_node in node_levels["not_connected"]:
                 node_dictionary[not_connected_node].update({'new_id': new_id_counter})
                 new_id_counter += 1
@@ -665,7 +667,7 @@ if __name__ == "__main__":
                 max_depth = read_file.max_depth
                 node_levels = read_file.tree_structure
             else:
-                max_depth, node_levels = populate_levels(selected_root_node)
+                max_depth, node_levels = populate_levels(selected_root_node, True)
                 update_tree_file()
 
             print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}\n")
@@ -804,7 +806,7 @@ if __name__ == "__main__":
 
                     new_node = create_node(new_label, new_node_type)
                     last_node_created = new_node
-                    max_depth, node_levels = populate_levels(selected_root_node)
+                    max_depth, node_levels = populate_levels(selected_root_node, False)
                     update_tree_file()
                     utils.print_message(True, f"Created node: {print_node(new_node)}\n")
 
@@ -831,7 +833,6 @@ if __name__ == "__main__":
                                 node_dictionary[found_id].update({"pieces": args.label})
                             if args.type:
                                 node_dictionary[found_id].update({"type": args.type})
-                            max_depth, node_levels = populate_levels(selected_root_node)
                             update_tree_file()
                             utils.print_message(True, f"Modified node: {print_node(found_id)}\n")
                     else:
@@ -847,7 +848,7 @@ if __name__ == "__main__":
                             if child_node_id and (child_node_id in node_levels["not_connected"]):
                                 new_edge = connect_nodes(parent_node_id, child_node_id)
                                 last_edge_created = new_edge
-                                max_depth, node_levels = populate_levels(selected_root_node)
+                                max_depth, node_levels = populate_levels(selected_root_node, False)
                                 update_tree_file()
                                 utils.print_message(True, f"Connected nodes: {parsed_arguments[0]}-"
                                                           f"{parsed_arguments[1]}\n")
@@ -872,7 +873,7 @@ if __name__ == "__main__":
                                 if edge_to_remove:
                                     disconnect_nodes(edge_to_remove)
 
-                                    max_depth, node_levels = populate_levels(selected_root_node)
+                                    max_depth, node_levels = populate_levels(selected_root_node, False)
 
                                     update_tree_file()
                                     utils.print_message(True, f"Disconnected nodes: {parsed_arguments[0]}-"
@@ -892,7 +893,7 @@ if __name__ == "__main__":
                     node_id = check_node_get_original_id(args.delete)
                     if node_id:
                         delete_node(node_id)
-                        max_depth, node_levels = populate_levels(selected_root_node)
+                        max_depth, node_levels = populate_levels(selected_root_node, False)
                         update_tree_file()
                         utils.print_message(True, f"Deleted node: {node_id}\n")
                     else:
@@ -903,7 +904,7 @@ if __name__ == "__main__":
                     new_root_node_id = check_node_get_original_id(args.root)
                     selected_root_node = new_root_node_id
                     set_root(selected_root_node)
-                    max_depth, node_levels = populate_levels(selected_root_node)
+                    max_depth, node_levels = populate_levels(selected_root_node, True)
                     update_tree_file()
                     utils.print_message(True, f"Changed root node to: {args.root}\n")
 
@@ -964,7 +965,7 @@ if __name__ == "__main__":
                         max_depth = read_file.max_depth
                         node_levels = read_file.tree_structure
                     else:
-                        max_depth, node_levels = populate_levels(selected_root_node)
+                        max_depth, node_levels = populate_levels(selected_root_node, True)
                         update_tree_file()
 
                     print(f"loaded file: {read_file.filename} - created file: {read_file.new_filename}\n")
