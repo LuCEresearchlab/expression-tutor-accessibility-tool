@@ -370,11 +370,13 @@ def set_root(new_root):
 # creates a new node, standard value not connected, label and node type can be specified
 def create_node(label, node_type):
     if last_node_created == '00':
+        newid = 0
         node_key = 'n0'
     else:
+        newid = int(last_node_created[1:]) + 1
         node_key = 'n' + str(int(last_node_created[1:]) + 1)
 
-    node_dictionary[node_key] = {'new_id': None,
+    node_dictionary[node_key] = {'new_id': newid,
                                  'expanded': False,
                                  'pieces': label,
                                  'type': node_type,
