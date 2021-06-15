@@ -1,0 +1,146 @@
+{
+  "nodes": {
+    "n0": {
+      "new_id": "root",
+      "expanded": false,
+      "pieces": [
+        "#",
+        "+",
+        "#"
+      ],
+      "type": "Number",
+      "value": "10"
+    },
+    "n1": {
+      "new_id": 1,
+      "expanded": false,
+      "pieces": [
+        "#",
+        "-",
+        "#"
+      ],
+      "type": "Boolean",
+      "value": "true"
+    },
+    "n2": {
+      "new_id": 2,
+      "expanded": false,
+      "pieces": [
+        "#",
+        "/",
+        "#"
+      ],
+      "type": "Object",
+      "value": ""
+    },
+    "n3": {
+      "new_id": 3,
+      "expanded": false,
+      "pieces": [
+        "1"
+      ],
+      "type": "",
+      "value": ""
+    },
+    "n4": {
+      "new_id": 4,
+      "expanded": false,
+      "pieces": [
+        "2"
+      ],
+      "type": "",
+      "value": ""
+    },
+    "n5": {
+      "new_id": 5,
+      "expanded": false,
+      "pieces": [
+        "3"
+      ],
+      "type": "",
+      "value": ""
+    },
+    "n7": {
+      "new_id": 6,
+      "expanded": false,
+      "pieces": [
+        "5"
+      ],
+      "type": "",
+      "value": "NotConnected"
+    },
+    "n8": {
+      "new_id": 7,
+      "expanded": false,
+      "pieces": [
+        "6"
+      ],
+      "type": "",
+      "value": "NotConnected"
+    },
+    "n9": {
+      "new_id": 8,
+      "expanded": false,
+      "pieces": [
+        "7"
+      ],
+      "type": "",
+      "value": "NotConnected"
+    }
+  },
+  "edges": {
+    "e0": {
+      "parentNodeId": "n0",
+      "childNodeId": "n1",
+      "parentPieceId": 0
+    },
+    "e1": {
+      "parentNodeId": "n0",
+      "childNodeId": "n2",
+      "parentPieceId": 2
+    },
+    "e2": {
+      "parentNodeId": "n1",
+      "childNodeId": "n3",
+      "parentPieceId": 0
+    },
+    "e3": {
+      "parentNodeId": "n1",
+      "childNodeId": "n4",
+      "parentPieceId": 2
+    },
+    "e4": {
+      "parentNodeId": "n2",
+      "childNodeId": "n5",
+      "parentPieceId": 0
+    }
+  },
+  "treeStructure": {
+    "not_connected": [
+      "n7",
+      "n8",
+      "n9"
+    ],
+    "root": [
+      "n0"
+    ],
+    "1": [
+      "n1",
+      "n2"
+    ],
+    "2": [
+      "n3",
+      "n4",
+      "n5"
+    ]
+  },
+  "variables": {
+    "originalFileName": "Example2.json",
+    "selectedRootNode": "n0",
+    "nodeConnector": "#",
+    "nodeStructure": "{parentID; nodeID; childrenID; label; type; value}",
+    "maxDepth": 2,
+    "LastCreatedNodeID": "n9",
+    "LastCreatedEdgeID": "e4"
+  }
+}

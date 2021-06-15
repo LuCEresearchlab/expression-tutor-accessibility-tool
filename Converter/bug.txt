@@ -1,3 +1,0 @@
-type: treeDiagram, nodes: 1, maxDepth: 0, nodeStructure: {parentID; nodeID; childrenID; label; type; value}, connector: "#"
-----------
-@not_connected {null;0;null;"scemo";noType;NotConnected} 

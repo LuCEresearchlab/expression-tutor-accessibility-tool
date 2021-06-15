@@ -5,8 +5,8 @@ import os
 import argparse
 
 # import helper files
-import nearleyReader
-import utils
+import utils.nearleyReader
+import utils.utils
 
 
 # defines the file struct that is used to parse a file and return a struct of that file.
