@@ -3,7 +3,7 @@
 @builtin "whitespace.ne"
 @builtin "string.ne"
 
-# A diagram is composed of a description and the the list of levels where the
+# A diagram is composed of a description and the list of levels where the
 # nodes are contained, the description and the list are separated by a separator.
 graph -> graphDescription graphSeparator graphLevels _
 {% function(d) {return {description: d[0], graphLevels: d[2]}} %}
@@ -25,10 +25,10 @@ graphDescription -> _ "type:" _ graphType _ ", nodes:" _ nodeNumber _ ", maxDept
 # graphType describes the type of diagram that we are dealing with.
 graphType -> "treeDiagram" {% id %}
 
-# nodeNumber is the number of nodes that are in the diagram (defined by a unsigned int).
+# nodeNumber is the number of nodes that are in the diagram (defined by n unsigned int).
 nodeNumber -> unsigned_int {% id %}
 
-# maxDepth is the maximal depth of the diagram (defined by a unsigned int).
+# maxDepth is the maximal depth of the diagram (defined by an unsigned int).
 maxDepth -> unsigned_int {% id %}
 
 # The node structure can be different, depending on the usage of the tree diagram.
